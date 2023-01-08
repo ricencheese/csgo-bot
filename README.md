@@ -15,7 +15,7 @@
 *   **████ ███** - Useful against other ███████s.
 *   **Visuals** - Visual advantages.
 *   **██████████ ███████** - ███ ██████ █████, ██████, ██████, ███ ████████ ███ ████ ██ ████ █████████! ████ ██ ██████-█████ ████.
-*   **█████** - Want to increase the footstep volume of enemies?
+*   **█████** - ████ ██ ████████ ███ ████████ ██████ ██ ███████?
 *   **█████** - Menu style, layout, colours.
 *   **Misc** - Other features.
 *   **Config** - JSON config system.
