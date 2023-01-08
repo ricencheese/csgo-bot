@@ -84,12 +84,11 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
 
     memory->globalVars->serverTime(cmd);
 
-    features->misc.collisionCheck(getEngineInterfaces());
+    //features->misc.collisionCheck(getEngineInterfaces());
     features->misc.findBreakable(getEngineInterfaces(),cmd);
     features->misc.gotoBotzPos(cmd, getEngineInterfaces());
     features->misc.reload(cmd, *memory, getEngineInterfaces());
 
-    features->visuals.thirdperson();
 
 
 
@@ -581,6 +580,7 @@ void GlobalContext::renderFrame()
 
         features->misc.drawPath(getEngineInterfaces());
 
+        features->visuals.thirdperson();
         features->aimbot.updateInput(*config);
         features->visuals.updateInput();
         StreamProofESP::updateInput(*config);

@@ -96,8 +96,6 @@ public:
     void aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept;
     //void findDoors(const EngineInterfaces& engineInterfaces, csgo::UserCmd* cmd) noexcept;
     void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
-    int fallDamageCheck(const EngineInterfaces& engineInterfaces, csgo::Vector pos) noexcept;
-    void collisionCheck(const EngineInterfaces& engineInterfaces) noexcept;
     void drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept;
     void pathfindBackup(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     void pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory, csgo::Vector endpos) noexcept;

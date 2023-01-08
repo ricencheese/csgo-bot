@@ -185,21 +185,24 @@ struct BotzConfig {
 
     std::vector<csgo::Vector> waypoints{ {0,0,0} }, nodes{ {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0} };
     int nodeRadius{ 33 };
-    int nodeIndex{ 0 };
     csgo::Vector lastCheckPos{ 0,0,0 };
     float posDelta{ 0.f };
     float lastCheckTime{ 0.f };
     std::vector<float>gcost{ 0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f }, hcost{ 0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f }, fcost{ 0.f,0.f,0.f,0.f,9999999.f,0.f,0.f,0.f,0.f };
-    std::vector<bool>walk{ false,false,false,false,false,false,false,false,false }, crouch{ false,false,false,false,false,false,false,false,false }, crouchJump{ false,false,false,false,false,false,false,false,false };
+    std::array<bool,9>walk{ false,false,false,false,false,false,false,false,false }, crouch{ false,false,false,false,false,false,false,false,false }, crouchJump{ false,false,false,false,false,false,false,false,false };
     //^if I do everything right,this should be obsolete soon
 
 
     std::vector<csgo::Vector> openNodes;
     std::vector<csgo::Vector> closedNodes;
     std::vector<int>openNodesParents, closedNodesParents;
-    int currentNode;
+    int currentNode{ 0 };
     bool pathFound{ false };
-
+    std::vector<csgo::Trace>tracez;
+    csgo::Vector checkOrigin;
+    csgo::Vector tempFloorPos{ 0,0,0 };
+    //first: same as collisionCheck(); second: true if open, false if closed
+    std::pair<int, bool>nodeIndex;
 
 
     csgo::Vector playerPingLoc{ 0,0,0 };
@@ -233,9 +236,9 @@ struct BotzConfig {
     csgo::Trace traceTesting;
 
     //communication stuff
-    std::vector<std::string> radioTranslate{ "","","go","fallback","sticktog","holdpos","followme", "","roger","negative","cheer","compliment",
-                                             "thanks","","enemyspot","needbackup","takepoint","sectorclear","inposition","coverme","regroup",
-                                             "takingfire","report","", "getout", "enemydown","","","go_a","go_b","needrop"};
+    const std::array<std::string,31> radioTranslate { "","","go","fallback","sticktog","holdpos","followme", "","roger","negative","cheer","compliment",
+                                                     "thanks","","enemyspot","needbackup","takepoint","sectorclear","inposition","coverme","regroup",
+                                                     "takingfire","report","", "getout", "enemydown","","","go_a","go_b","needrop"};
 
     bool shouldReportToTeam{ true };        //report attacker info on death
     bool reportDetailsCallout{ true };
@@ -1497,108 +1500,73 @@ void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd*
     }
 }
 
-int Misc::fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept {
-    if (!localPlayer)
+int fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept { 
+    if (!localPlayer)//todo: add like a bool to check if you want to print the falldamage value to the console
         return -1;
     if (!localPlayer.get().isAlive())
         return -1;
-
     //-0.000128943x^{2}+0.341019x-65.806 <- calculates fall damage kinda well 
 
-    csgo::Trace trace,trace2,trace3;
+    csgo::Trace trace;
     float fallHeight,fallDamage;
-    std::string printToConsole = "echo Fall height according to trace: ";
-                                                                //218(217.69) is minimum 1 damage fall height if you walk off a ledge
-    engineInterfaces.engineTrace().traceRay({ pos,{pos.x,pos.y,pos.z - 218.f} }, 0x46004009, localPlayer.get().getPOD(), trace2);
-    //ray collided with something at 1hp damage, just return 0
-    if (trace2.fraction < 1.f)
-        return 0;
-                                                                //627(626.97) is minimum 100 damage fall height if you walk off a ledge
-    engineInterfaces.engineTrace().traceRay({ pos,{pos.x,pos.y,pos.z - 627.f} }, 0x46004009, localPlayer.get().getPOD(), trace);
-    
-                                                                //936(935.97) is minimum 150 damage fall height if you walk off a ledge
-    engineInterfaces.engineTrace().traceRay({ pos,{pos.x,pos.y,pos.z - 936.f} }, 0x46004009, localPlayer.get().getPOD(), trace3);
-    if (trace.fraction == 1.0f) {
-        if (trace3.fraction == 1.0f)
-            return 100;//fall damage is 100% lethal, don't even bother returning a proper value
-        else fallHeight = pos.distTo({ pos.x, pos.y, pos.z - 627 }) * trace.fraction;
-    }
-    else {
-        fallHeight = pos.distTo({ pos.x, pos.y, pos.z - 627 })*trace.fraction;
-    }
-    printToConsole += std::to_string(fallHeight);
-    fallDamage = -0.000128943 * pow(fallHeight, 2) + 0.341019 * fallHeight - 65.806;
-    printToConsole += "; echo Fall damage according to trace: ";
-    printToConsole += std::to_string(fallDamage);
-    engineInterfaces.getEngine().clientCmdUnrestricted(printToConsole.c_str());
-    return int(fallDamage);
+                                                                
+    engineInterfaces.engineTrace().traceRay({ pos,{pos.x,pos.y,pos.z -1500.f} }, 0x46004009, localPlayer.get().getPOD(), trace);
+    fallHeight = pos.distTo(trace.endpos);
+    botzConfig.tempFloorPos = { pos.x,pos.y,pos.z - fallHeight };
+    fallDamage = -0.000128943f * pow(fallHeight, 2.f) + 0.341019f * fallHeight - 65.806f;
 
+
+    return int(fallDamage);
 }
 
-void Misc::collisionCheck(const EngineInterfaces& engineInterfaces) noexcept {
+
+//return 0 if there's no way to get to desired position, 1 if you can walk to get to pos,
+//2 if you can get to pos by jumping,3 if you can get to pos by crouching, -1 if fuck you
+int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept {
 
     if (!localPlayer)
-        return;
-    if (!botzConfig.shouldwalk)
-        return;
+        return -1;
+    //if (!botzConfig.shouldwalk)
+    //    return;
 
     const csgo::Engine& engine = engineInterfaces.getEngine();
     if (!engine.isInGame())
-        return;
-    float distToPlayer{ botzConfig.waypoints.front().distTo(localPlayer.get().getAbsOrigin()) };
+        return -1;
+    botzConfig.tracez.clear();
+    fallDamageCheck(engineInterfaces,pos);
+    pos.z = botzConfig.tempFloorPos.z;      //set node pos to floor height
 
-    csgo::Vector checkPos{ localPlayer.get().getAbsOrigin() };
-    checkPos.x += botzConfig.nodeRadius;
-    checkPos.y += botzConfig.nodeRadius;
-    for (int dial = 0; dial < 9; dial++) {      //dial bc
+    botzConfig.checkOrigin = { pos.x, pos.y, pos.z + 18 };//{ pos.x,pos.y,pos.z + 18.f };
+    //H for horizontal, V for vertical, D for diagonal
+    csgo::Trace traceHBottom1, traceHBottom2, traceHBottomD1, traceHBottomD2,traceVMiddle, traceHTop1, traceHTop2, traceHTopD1, traceHTopD2;
+    const csgo::EngineTrace Trace=engineInterfaces.engineTrace();
 
-        switch (dial) {
-        case 0:break;
-        case 1:checkPos.y -= botzConfig.nodeRadius; break;
-        case 2:checkPos.y -= botzConfig.nodeRadius; break;
-        case 3:checkPos.x -= botzConfig.nodeRadius; break;
-        case 4:continue; break;
-        case 5:checkPos.y += botzConfig.nodeRadius * 2; break;
-        case 6:checkPos.x -= botzConfig.nodeRadius; break;
-        case 7:checkPos.y -= botzConfig.nodeRadius; break;
-        case 8:checkPos.y -= botzConfig.nodeRadius; break;
-        }                                                                                            
-                                                                                                     
-        csgo::Trace htrace, htrace2, vtrace, htraceJump, htraceJump2;
-        const csgo::Vector hstartPos = { checkPos.x - botzConfig.nodeRadius/2,checkPos.y - botzConfig.nodeRadius / 2,checkPos.z + 18 };
-        const csgo::Vector hendPos = { checkPos.x + botzConfig.nodeRadius / 2,checkPos.y + botzConfig.nodeRadius / 2,checkPos.z + 18 };
-        const csgo::Vector hstartPos2 = { checkPos.x + botzConfig.nodeRadius / 2,checkPos.y - 16,checkPos.z + 18 };
-        const csgo::Vector hendPos2 = { checkPos.x - botzConfig.nodeRadius / 2,checkPos.y + 16,checkPos.z + 18 };
-        const csgo::Vector vstartPos = { checkPos.x,checkPos.y,checkPos.z + 18};
-        const csgo::Vector vendPos = { checkPos.x, checkPos.y, checkPos.z + 55 };
-        const csgo::Vector hJumpStartPos = { checkPos.x - botzConfig.nodeRadius / 2, checkPos.y - botzConfig.nodeRadius / 2, checkPos.z + 60 };
-        const csgo::Vector hJumpStartPos2 = { checkPos.x + botzConfig.nodeRadius / 2, checkPos.y - botzConfig.nodeRadius / 2, checkPos.z + 60 };
-        const csgo::Vector hJumpEndPos = { checkPos.x + botzConfig.nodeRadius / 2, checkPos.y + botzConfig.nodeRadius / 2, checkPos.z + 60 };
-        const csgo::Vector hJumpEndPos2 = { checkPos.x - botzConfig.nodeRadius / 2, checkPos.y + botzConfig.nodeRadius / 2, checkPos.z + 60 };
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottom1);
+    botzConfig.tracez.push_back(traceHBottom1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius/2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius/2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottom2);
+    botzConfig.tracez.push_back(traceHBottom2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottomD1);
+    botzConfig.tracez.push_back(traceHBottomD1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottomD2);
+    botzConfig.tracez.push_back(traceHBottomD2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z + 36.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceVMiddle);
+    botzConfig.tracez.push_back(traceVMiddle);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop1);
+    botzConfig.tracez.push_back(traceHTop1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop2);
+    botzConfig.tracez.push_back(traceHTop2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD1);
+    botzConfig.tracez.push_back(traceHTopD1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD2);
+    botzConfig.tracez.push_back(traceHTopD2);
 
-        engineInterfaces.engineTrace().traceRay({ hstartPos, hendPos }, (0x46004009| 0x10000), localPlayer.get().getPOD(), htrace);
-        engineInterfaces.engineTrace().traceRay({ hstartPos2, hendPos2 }, (0x46004009| 0x10000), localPlayer.get().getPOD(), htrace2);
-        engineInterfaces.engineTrace().traceRay({ vstartPos, vendPos }, (0x46004009| 0x10000), localPlayer.get().getPOD(), vtrace);
-        engineInterfaces.engineTrace().traceRay({ hJumpStartPos , hJumpEndPos }, (0x46004009| 0x10000), localPlayer.get().getPOD(), htraceJump);
-        engineInterfaces.engineTrace().traceRay({ hJumpStartPos2, hJumpEndPos2 }, (0x46004009| 0x10000), localPlayer.get().getPOD(), htraceJump2);
-
-        bool hcollision = (htrace.fraction < 1.f ? true : false);//true if ray hits a wall
-        bool hcollision2 = (htrace2.fraction < 1.f ? true : false);//true if ray hits a wall
-        bool vcollision = (vtrace.fraction < 1.f ? true : false);//true if ray hits a wall
-        bool hcollisionJump = (htraceJump.fraction < 1.f ? true : false);//true if ray hits a wall
-        bool hcollisionJump2 = (htraceJump2.fraction < 1.f ? true : false);//true if ray hits a wall
-
-        if (hcollision || hcollision2) {
-            botzConfig.walk[dial] = false;
-        }
-        else botzConfig.walk[dial] = true;
-        if (vcollision)
-            botzConfig.crouch[dial] = false;
-        else botzConfig.crouch[dial] = true;
-        if (hcollisionJump || hcollisionJump2)
-            botzConfig.crouchJump[dial] = false;
-        else botzConfig.crouchJump[dial] = true;
-    }
+    if (traceHBottom1.fraction == 1.0f && traceHBottom2.fraction == 1.0f && traceHBottomD1.fraction == 1.0f && traceHBottomD2.fraction == 1.0f)
+        return 1;
+    else if (traceVMiddle.fraction == 1.0f)
+        return 2;
+    else if (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f)
+        return 3;
+    else return 0;
 }
 
 void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
@@ -1615,89 +1583,30 @@ void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
     
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
-    ImVec2 screenfeetpos,screenwaypos;
+    ImVec2 screenfeetpos;
+    for (int index = 0; index < botzConfig.openNodes.size(); index++) {
+        ImVec2 screenNodePos;
+        Helpers::worldToScreenPixelAligned(botzConfig.openNodes[index], screenNodePos);
+        dlist->AddRectFilled({ screenNodePos.x - 13.f,screenNodePos.y - 13.f }, { screenNodePos.x + 13.f,screenNodePos.y + 13.f }, 0xCC333333);
+        dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y - 12.f }, 0xFFFFFFFF, std::to_string(index).c_str());
+    }
+    if (botzConfig.tracez.size() == 0)
+        return;
+    else {
+            std::vector<ImVec2>traceScreenPosStart,traceScreenPosEnd;
+            for (int index = 0; index < botzConfig.tracez.size(); index++) {
+                ImVec2 temp;
+                Helpers::worldToScreenPixelAligned(botzConfig.tracez[index].startpos, temp);
+                traceScreenPosStart.push_back(temp);
+                Helpers::worldToScreenPixelAligned(botzConfig.tracez[index].endpos, temp);
+                traceScreenPosEnd.push_back(temp);
 
-    Helpers::worldToScreenPixelAligned(localPlayer.get().getAbsOrigin(), screenfeetpos);
-    Helpers::worldToScreenPixelAligned(botzConfig.waypoints.back(), screenwaypos);
-    
-    float distToPlayer{ botzConfig.waypoints.front().distTo(localPlayer.get().getAbsOrigin()) };
-
-    dlist->AddCircleFilled(screenfeetpos, 25.f, 0xBBBBFFBB, 8);
-    dlist->AddLine(screenfeetpos, screenwaypos, 0xFFBBFFBB, 1.f);
-    dlist->AddText(ImVec2(750, 250), 0xFFFFFFFF, std::to_string(botzConfig.hitdoors).c_str());
-
-    csgo::Vector viewangleshit{ localPlayer.get().getEyePosition().x + cos(Helpers::deg2rad(botzConfig.localViewAngles.y + 19.9f * botzConfig.tracerayAngle)) * 60,
-                            localPlayer.get().getEyePosition().y + sin(Helpers::deg2rad(botzConfig.localViewAngles.y + 19.9f * botzConfig.tracerayAngle)) * 60,
-                            localPlayer.get().getEyePosition().z };
-    ImVec2 screenviewangle,screeneyepos;
-    Helpers::worldToScreenPixelAligned(viewangleshit, screenviewangle);
-    Helpers::worldToScreenPixelAligned(localPlayer.get().getEyePosition(), screeneyepos);
-    dlist->AddLine(screeneyepos, screenviewangle, 0xFFFF0000, 1.0f);
-
-    csgo::Vector checkPos{localPlayer.get().getAbsOrigin()};
-    checkPos.x += botzConfig.nodeRadius;
-    checkPos.y += botzConfig.nodeRadius;
-
-    for (int dial = 0; dial < 9; dial++) {      //dial bc
-        
-        switch (dial) {
-        case 0:break;
-        case 1:checkPos.y -= botzConfig.nodeRadius; break;
-        case 2:checkPos.y -= botzConfig.nodeRadius; break;
-        case 3:checkPos.x -= botzConfig.nodeRadius; break;
-        case 4:continue; break;
-        case 5:checkPos.y += botzConfig.nodeRadius * 2; break;
-        case 6:checkPos.x -= botzConfig.nodeRadius; break;
-        case 7:checkPos.y -= botzConfig.nodeRadius; break;
-        case 8:checkPos.y -= botzConfig.nodeRadius; break;
+                dlist->AddLine(traceScreenPosStart[index], traceScreenPosEnd[index], ((botzConfig.tracez[index].fraction < 1.0f || botzConfig.tracez[0].contents == 1) ? 0xDDFF0000 : 0xDD00FF00));
+            }
         }
-        const csgo::Vector hstartPos = { checkPos.x - botzConfig.nodeRadius/2,checkPos.y - botzConfig.nodeRadius / 2,checkPos.z + 18 };
-        const csgo::Vector hendPos = { checkPos.x + botzConfig.nodeRadius / 2,checkPos.y + botzConfig.nodeRadius / 2,checkPos.z + 18 };
-        const csgo::Vector hstartPos2 = { checkPos.x + botzConfig.nodeRadius / 2,checkPos.y - 16,checkPos.z + 18 };
-        const csgo::Vector hendPos2 = { checkPos.x - botzConfig.nodeRadius / 2,checkPos.y + 16,checkPos.z + 18 };
-        const csgo::Vector vstartPos = { checkPos.x,checkPos.y,checkPos.z + 18};
-        const csgo::Vector vendPos = { checkPos.x, checkPos.y, checkPos.z + 55 };
-        const csgo::Vector hJumpStartPos = { checkPos.x - botzConfig.nodeRadius / 2, checkPos.y - botzConfig.nodeRadius / 2, checkPos.z + 60 };
-        const csgo::Vector hJumpStartPos2 = { checkPos.x + botzConfig.nodeRadius / 2, checkPos.y - botzConfig.nodeRadius / 2, checkPos.z + 60 };
-        const csgo::Vector hJumpEndPos = { checkPos.x + botzConfig.nodeRadius / 2, checkPos.y + botzConfig.nodeRadius / 2, checkPos.z + 60 };
-        const csgo::Vector hJumpEndPos2 = { checkPos.x - botzConfig.nodeRadius / 2, checkPos.y + botzConfig.nodeRadius / 2, checkPos.z + 60 };
 
-        ImVec2 screenCheckPos;
-        Helpers::worldToScreenPixelAligned(checkPos, screenCheckPos);
-
-        if (botzConfig.circlesOrCost) {
-            dlist->AddCircleFilled(screenCheckPos, 14.f, (botzConfig.crouchJump[dial] ? 0x99FFFF00 : 0x9900FFFF), 8);
-            dlist->AddCircleFilled(screenCheckPos, 10.f, (botzConfig.walk[dial] ? 0xFF00FF00 : 0xFFFF0000), 8);
-            dlist->AddCircleFilled(screenCheckPos, 7.f, (botzConfig.crouch[dial] ? 0xFF0000FF : 0xFFFF00FF), 8);
-        }
-        else {
-            dlist->AddRectFilled(ImVec2(screenCheckPos.x - 35.f, screenCheckPos.y - 35.f), ImVec2(screenCheckPos.x + 35.f, screenCheckPos.y + 35.f), 0xDD333333);
-            dlist->AddText(ImVec2(screenCheckPos.x - 33.f, screenCheckPos.y - 33.f), 0xFFFFFFFF, ("G Cost =" + std::to_string(int(checkPos.distTo(localPlayer.get().getAbsOrigin())))).c_str());
-            dlist->AddText(ImVec2(screenCheckPos.x-33.f, screenCheckPos.y-13.f), 0xFFFFFFFF, ("H Cost=" + std::to_string(int(checkPos.distTo(botzConfig.waypoints.front())))).c_str());
-            dlist->AddText(ImVec2(screenCheckPos.x-33.f, screenCheckPos.y + 13), 0xFFFFFFFF, ("F Cost=" + std::to_string(int(checkPos.distTo(localPlayer.get().getAbsOrigin()) + checkPos.distTo(botzConfig.waypoints.front())))).c_str());
-        }
-        if (botzConfig.drawPathfindingTraces) {
-            ImVec2 hstart, hend, hstart2, hend2, vstart, vend, hJumpStart, hJumpEnd, hJumpStart2, hJumpEnd2;
-            Helpers::worldToScreenPixelAligned(hstartPos, hstart);
-            Helpers::worldToScreenPixelAligned(hendPos, hend);
-            Helpers::worldToScreenPixelAligned(hstartPos2, hstart2);
-            Helpers::worldToScreenPixelAligned(hendPos2, hend2);
-            Helpers::worldToScreenPixelAligned(vstartPos, vstart);
-            Helpers::worldToScreenPixelAligned(vendPos, vend);
-            Helpers::worldToScreenPixelAligned(hJumpStartPos, hJumpStart);
-            Helpers::worldToScreenPixelAligned(hJumpEndPos, hJumpEnd);
-            Helpers::worldToScreenPixelAligned(hJumpStartPos2, hJumpStart2);
-            Helpers::worldToScreenPixelAligned(hJumpEndPos2, hJumpEnd2);
-            dlist->AddLine(hstart, hend, 0xFF00FF00, 2.f);
-            dlist->AddLine(hstart2, hend2, 0xFF009999, 2.f);
-            dlist->AddLine(vstart, vend, 0xFF00BB00, 2.f);
-            dlist->AddLine(hJumpStart, hJumpEnd, 0x99FFFF00, 2.f);
-            dlist->AddLine(hJumpStart2, hJumpEnd2, 0x99FFFF55, 2.f);
+    }
             
-        }
-    }                                           
-}
-
 void Misc::pathfindBackup(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
     if (!localPlayer)
         return;
@@ -1738,7 +1647,7 @@ void Misc::pathfindBackup(const EngineInterfaces& engineInterfaces, const Memory
         }
         if (botzConfig.waypoints.size()==1) {
             botzConfig.waypoints.push_back(botzConfig.nodes[std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()))]);
-            botzConfig.nodeIndex = std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()));
+            botzConfig.nodeIndex.first = std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()));
         }
     }
     if (botzConfig.lastCheckTime + 5 < memory.globalVars->realtime) {   //if bot gets stuck somewhere, set his temp waypoint to abs origin
@@ -1750,7 +1659,84 @@ void Misc::pathfindBackup(const EngineInterfaces& engineInterfaces, const Memory
     }
 }
 
+void addNeighborNodes(const EngineInterfaces& engineInterfaces,int nodeIndex) noexcept{
+    if (!localPlayer)
+        return;
+    if (!localPlayer.get().isAlive())
+        return;
+
+    for (int index = 0; index < 8; index++) {
+        csgo::Vector potentialOpen;
+        csgo::Vector offset{ 0,0,0 };
+        //2 3 4
+        //1 d 5
+        //0 7 6
+        switch (index) {
+        case 0:
+            offset.x = 0.f - botzConfig.nodeRadius;
+            offset.y = 0.f - botzConfig.nodeRadius;
+            offset.z = 0.f;
+            break;
+        case 1:
+            offset.x = 0.f - botzConfig.nodeRadius;
+            offset.y = 0.f;
+            offset.z = 0.f;
+            break;
+        case 2:
+            offset.x = 0.f - botzConfig.nodeRadius;
+            offset.y = 0.f + botzConfig.nodeRadius;
+            offset.z = 0.f;
+            break;
+        case 3:
+            offset.x = 0.f;
+            offset.y = 0.f + botzConfig.nodeRadius;
+            offset.z = 0.f;
+            break;
+        case 4:
+            offset.x = 0.f + botzConfig.nodeRadius;
+            offset.y = 0.f + botzConfig.nodeRadius;
+            offset.z = 0.f;
+            break;
+        case 5:
+            offset.x = 0.f + botzConfig.nodeRadius;
+            offset.y = 0.f;
+            offset.z = 0.f;
+            break;
+        case 6:
+            offset.x = 0.f + botzConfig.nodeRadius;
+            offset.y = 0.f - botzConfig.nodeRadius;
+            offset.z = 0.f;
+            break;
+        case 7:
+            offset.x = 0.f;
+            offset.y = 0.f - botzConfig.nodeRadius;
+            offset.z = 0.f;
+            break;
+        default:break;
+        }
+        potentialOpen = botzConfig.openNodes[botzConfig.currentNode] + offset;
+        if (std::find(botzConfig.closedNodes.begin(), botzConfig.closedNodes.end(), potentialOpen) != botzConfig.closedNodes.end())
+            continue;
+        if (collisionCheck(engineInterfaces, potentialOpen) == 0)
+            continue;
+        potentialOpen.z = botzConfig.tempFloorPos.z;
+        botzConfig.closedNodes.push_back(potentialOpen);
+        
+    }
+}
+
+void openNode(int nodeIndex) noexcept {
+    if (!localPlayer)
+        return;
+    if (!localPlayer.get().isAlive())
+        return;
+
+    
+}
+
 void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory,csgo::Vector endpos) noexcept {
+    if (!botzConfig.isbotzon)
+        return;
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
@@ -1758,15 +1744,21 @@ void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memo
     const csgo::Engine& engine=engineInterfaces.getEngine();
     if (!engine.isInGame())
         return;
-
-                //check if the current node is the finish point
-        if (botzConfig.closedNodes[botzConfig.currentNode].x - botzConfig.waypointApproximation<endpos.x &&
-            botzConfig.closedNodes[botzConfig.currentNode].x + botzConfig.waypointApproximation>endpos.x &&
-            botzConfig.closedNodes[botzConfig.currentNode].y - botzConfig.waypointApproximation<endpos.y &&
-            botzConfig.closedNodes[botzConfig.currentNode].y + botzConfig.waypointApproximation>endpos.y &&
-            botzConfig.closedNodes[botzConfig.currentNode].z - botzConfig.waypointApproximation<endpos.z &&
-            botzConfig.closedNodes[botzConfig.currentNode].z + botzConfig.waypointApproximation>endpos.z)
-                return;
+    botzConfig.pathFound = false;
+    botzConfig.openNodes.clear();
+    botzConfig.closedNodes.clear();
+    //botzConfig.openNodes.resize(2000);
+    //botzConfig.closedNodes.resize(2000);
+    botzConfig.currentNode = 0;
+    botzConfig.openNodes.push_back(localPlayer.get().getAbsOrigin());
+            //check if the current node is the finish point
+    //if (botzConfig.closedNodes.back().x - botzConfig.waypointApproximation<endpos.x &&       //todo: move this to uhhhhh checkIfPathIsFound() or something like that idk
+    //    botzConfig.closedNodes.back().x + botzConfig.waypointApproximation>endpos.x &&       //crashes due to attempting to get std::vector::back() of an empty vector :P
+    //    botzConfig.closedNodes.back().y - botzConfig.waypointApproximation<endpos.y &&
+    //    botzConfig.closedNodes.back().y + botzConfig.waypointApproximation>endpos.y &&
+    //    botzConfig.closedNodes.back().z - botzConfig.waypointApproximation<endpos.z &&
+    //    botzConfig.closedNodes.back().z + botzConfig.waypointApproximation>endpos.z)
+    //        return;
 }
 
 void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
@@ -1774,6 +1766,23 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
         return;
     if (!localPlayer.get().isAlive())
         return;
+    ImDrawList* dlist;
+    dlist = ImGui::GetBackgroundDrawList();
+    const csgo::Engine engine = engineInterfaces.getEngine();
+    for (int index = 0; index < botzConfig.closedNodes.size(); index++) {
+        ImVec2 point1, point2, point3;
+        Helpers::worldToScreenPixelAligned({ botzConfig.closedNodes[index].x-botzConfig.nodeRadius/4.f,botzConfig.closedNodes[index].y     ,botzConfig.closedNodes[index].z}, point1);
+        Helpers::worldToScreenPixelAligned({ botzConfig.closedNodes[index].x-botzConfig.nodeRadius/4.f,botzConfig.closedNodes[index].y-botzConfig.nodeRadius/4.f,botzConfig.closedNodes[index].z}, point2);
+        Helpers::worldToScreenPixelAligned({ botzConfig.closedNodes[index].x     ,botzConfig.closedNodes[index].y-botzConfig.nodeRadius/4.f,botzConfig.closedNodes[index].z}, point3);
+        dlist->AddTriangleFilled(point1,point2,point3, 0xFFAA4444);
+    }
+    for (int index = 0; index < botzConfig.openNodes.size(); index++) {
+        ImVec2 point1, point2, point3;
+        Helpers::worldToScreenPixelAligned({ botzConfig.openNodes[index].x - botzConfig.nodeRadius/4.f,botzConfig.openNodes[index].y       ,botzConfig.openNodes[index].z }, point1);
+        Helpers::worldToScreenPixelAligned({ botzConfig.openNodes[index].x - botzConfig.nodeRadius/4.f,botzConfig.openNodes[index].y - botzConfig.nodeRadius/4.f,botzConfig.openNodes[index].z }, point2);
+        Helpers::worldToScreenPixelAligned({ botzConfig.openNodes[index].x       ,botzConfig.openNodes[index].y - botzConfig.nodeRadius/4.f,botzConfig.openNodes[index].z }, point3);
+        dlist->AddTriangleFilled(point1, point2, point3, 0xFF44AA44);
+    }
 }
 
 void Misc::reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, bool forceReport) noexcept {
@@ -1919,7 +1928,7 @@ void Misc::gotoBotzPos(csgo::UserCmd* cmd, const EngineInterfaces& engineInterfa
     }
     else {
         //not in position yet, move closer/do other stuff while you're walking(todo)
-        if (botzConfig.crouchJump[botzConfig.nodeIndex] && !botzConfig.walk[botzConfig.nodeIndex] && localPlayer.get().isOnGround()){
+        if (botzConfig.crouchJump[botzConfig.nodeIndex.first] && !botzConfig.walk[botzConfig.nodeIndex.first] && localPlayer.get().isOnGround()){
             cmd->buttons |= csgo::UserCmd::IN_DUCK;
             cmd->buttons |= csgo::UserCmd::IN_JUMP;
         }
@@ -2154,25 +2163,33 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         if (botzConfig.isbotzon) {
             ImGui::Checkbox("Botz debug", &botzConfig.shouldDebug);
             if (botzConfig.shouldDebug) {
-                if (botzConfig.waypoints.size() > 0) {
-                    ImGui::SliderInt("Waypoint to edit", &botzConfig.editWaypoint, 1, botzConfig.waypoints.size());
+                if (botzConfig.closedNodes.size() > 0) {
+                    ImGui::SliderInt("Waypoint to edit", &botzConfig.editWaypoint, 1, botzConfig.closedNodes.size(),"%d",ImGuiSliderFlags_AlwaysClamp);
                     ImGui::SameLine();
                     if (ImGui::Button("copypos"))
-                        botzConfig.waypoints[botzConfig.editWaypoint - 1] = localPlayer.get().getAbsOrigin();
+                        botzConfig.closedNodes[botzConfig.editWaypoint - 1] = localPlayer.get().getAbsOrigin();
                     ImGui::SameLine();
                 }
                 if (ImGui::Button("+")) {
-                    botzConfig.waypoints.push_back({ 0,0,0 });
-                    botzConfig.editWaypoint = botzConfig.waypoints.size();
-                    botzConfig.waypoints[botzConfig.editWaypoint - 1] = localPlayer.get().getAbsOrigin();
+                    botzConfig.closedNodes.push_back({ 0,0,0 });
+                    botzConfig.editWaypoint = botzConfig.closedNodes.size();
+                    botzConfig.closedNodes[botzConfig.editWaypoint - 1] = localPlayer.get().getAbsOrigin();
                 }
-                if (botzConfig.waypoints.size() > 0) {
-                    ImGui::SliderFloat("botz goto position (X)", &botzConfig.waypoints[botzConfig.editWaypoint - 1].x, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-                    ImGui::SliderFloat("botz goto position (Y)", &botzConfig.waypoints[botzConfig.editWaypoint - 1].y, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-                    ImGui::SliderFloat("botz goto position (Z)", &botzConfig.waypoints[botzConfig.editWaypoint - 1].z, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+                if (ImGui::Button("find path"))
+                    Misc::pathfind(engineInterfaces,memory,{0.f,0.f,0.f});
+                if (ImGui::Button("open neighbor nodes of node"))
+                    addNeighborNodes(engineInterfaces,0);
+                if (botzConfig.closedNodes.size() > 0) {
+                    ImGui::SliderFloat("botz goto position (X)", &botzConfig.closedNodes[botzConfig.editWaypoint - 1].x, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+                    ImGui::SliderFloat("botz goto position (Y)", &botzConfig.closedNodes[botzConfig.editWaypoint - 1].y, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+                    ImGui::SliderFloat("botz goto position (Z)", &botzConfig.closedNodes[botzConfig.editWaypoint - 1].z, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+
                 }
                 if(ImGui::Button("calculate fall height"))
-                    Misc::fallDamageCheck(engineInterfaces,botzConfig.waypoints[0]);
+                    fallDamageCheck(engineInterfaces,botzConfig.waypoints[0]);
+                if (ImGui::Button("set pos to floor"))
+                    collisionCheck(engineInterfaces, botzConfig.waypoints[0]);
+                ImGui::Text(std::to_string(fallDamageCheck(engineInterfaces,botzConfig.waypoints[0])).c_str());
                 ImGui::Separator();
                 ImGui::SliderFloat("pos draw size", &botzConfig.posDrawSize, 1.0f, 10.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
             }
