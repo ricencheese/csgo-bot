@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "Source/InventoryChanger/GameItems",
+		"source" : "Source/InventoryChanger/GameItems"
+	}
+}

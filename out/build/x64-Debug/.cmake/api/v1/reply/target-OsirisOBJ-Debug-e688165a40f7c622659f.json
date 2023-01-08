@@ -1,0 +1,1333 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./cmake_pch.cxx.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./cmake_pch.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_demo.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_draw.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_freetype.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_stdlib.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_tables.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_widgets.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_impl_dx9.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/imgui/imgui_impl_win32.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/autofit/autofit.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/cff/cff.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/base/ftbase.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/base/ftbitmap.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/base/ftdebug.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/base/ftglyph.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/base/ftinit.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/base/ftsynth.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/base/ftsystem.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/psaux/psaux.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/pshinter/pshinter.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/psnames/psnames.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/raster/raster.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/sfnt/sfnt.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/smooth/smooth.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/freetype/src/truetype/truetype.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/MinHook/buffer.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/MinHook/hde/hde32.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/MinHook/hde/hde64.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/MinHook/hook.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Dependencies/MinHook/trampoline.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Config.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/ConfigStructs.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Endpoints.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/EventListener.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/GameData.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/GlobalContext.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/GUI.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Helpers.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hooks.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/imguiCustom.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InputUtil.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Memory.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Netvars.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/RetSpoofGadgets.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Texture.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/CSGO/EconItemView.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/CSGO/Entity.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/CSGO/GlobalVars.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/CSGO/KeyValues.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/CSGO/Utils.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Aimbot.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Backtrack.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Chams.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/EnginePrediction.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Glow.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Misc.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Sound.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/StreamProofESP.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Triggerbot.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hacks/Visuals.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Helpers/PatternFinder.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hooks/VmtSwap.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hooks/MinHook.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/Hooks/VmtHook.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/InventoryChanger.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/InventoryConfig.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/WeaponNames.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/Backend/Request/RequestHandler.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/GameIntegration/CrateLoot.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/GameIntegration/Inventory.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/GameIntegration/Items.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/GameItems/Storage.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/Inventory/StructsFromJson.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/ItemGenerator/ItemGenerator.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/InventoryChanger/ItemGenerator/TournamentMatches.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/MemorySearch/HybridPatternFinder.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/MemorySearch/PatternFinder.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/MemorySearch/PatternFinderScalar.cpp.obj"
+		},
+		{
+			"path" : "CMakeFiles/OsirisOBJ.dir/./Source/MemorySearch/PatternFinderSIMD.cpp.obj"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"add_dependencies",
+			"add_compile_options",
+			"target_compile_options",
+			"add_subdirectory",
+			"target_compile_definitions",
+			"target_include_directories",
+			"target_precompile_headers"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt",
+			"Dependencies/freetype/CMakeLists.txt",
+			"Dependencies/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 22,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 44,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 19,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 42,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 28,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 25,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 41,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 6,
+				"file" : 1,
+				"line" : 20,
+				"parent" : 8
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 10,
+				"parent" : 10
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 33,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 34,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 32,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 29,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "/MP"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "/utf-8"
+				},
+				{
+					"fragment" : "-std:c++20"
+				},
+				{
+					"fragment" : "/YcC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.hxx /FpC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/./cmake_pch.cxx.pch /FIC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.hxx"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 5,
+					"define" : "FT2_BUILD_LIBRARY"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "NOMINMAX"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "_USE_MATH_DEFINES"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 9,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/freetype/."
+				},
+				{
+					"backtrace" : 11,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/range-v3"
+				},
+				{
+					"backtrace" : 12,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Source"
+				},
+				{
+					"backtrace" : 13,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "20"
+			},
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 14,
+					"header" : "C:/Users/ricencheese/Desktop/Osiris-master/Source/pch.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "/MP"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "/utf-8"
+				},
+				{
+					"fragment" : "/YcC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.h /FpC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/./cmake_pch.c.pch /FIC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.h"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 5,
+					"define" : "FT2_BUILD_LIBRARY"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "NOMINMAX"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "_USE_MATH_DEFINES"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 9,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/freetype/."
+				},
+				{
+					"backtrace" : 11,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/range-v3"
+				},
+				{
+					"backtrace" : 12,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Source"
+				},
+				{
+					"backtrace" : 13,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies"
+				}
+			],
+			"language" : "C",
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 14,
+					"header" : "C:/Users/ricencheese/Desktop/Osiris-master/Source/pch.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				1
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "/MP"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "/utf-8"
+				},
+				{
+					"fragment" : "-std:c++20"
+				},
+				{
+					"fragment" : "/YuC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.hxx /FpC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/./cmake_pch.cxx.pch /FIC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.hxx"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 5,
+					"define" : "FT2_BUILD_LIBRARY"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "NOMINMAX"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "_USE_MATH_DEFINES"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 9,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/freetype/."
+				},
+				{
+					"backtrace" : 11,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/range-v3"
+				},
+				{
+					"backtrace" : 12,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Source"
+				},
+				{
+					"backtrace" : 13,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "20"
+			},
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 14,
+					"header" : "C:/Users/ricencheese/Desktop/Osiris-master/Source/pch.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "/MP"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "/utf-8"
+				},
+				{
+					"fragment" : "/YuC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.h /FpC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/./cmake_pch.c.pch /FIC:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.h"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 5,
+					"define" : "FT2_BUILD_LIBRARY"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "NOMINMAX"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "_USE_MATH_DEFINES"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 9,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/freetype/."
+				},
+				{
+					"backtrace" : 11,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies/range-v3"
+				},
+				{
+					"backtrace" : 12,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Source"
+				},
+				{
+					"backtrace" : 13,
+					"path" : "C:/Users/ricencheese/Desktop/Osiris-master/Dependencies"
+				}
+			],
+			"language" : "C",
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 14,
+					"header" : "C:/Users/ricencheese/Desktop/Osiris-master/Source/pch.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "Shaders::@f1be873c723ad378b0c8"
+		}
+	],
+	"id" : "OsirisOBJ::@6890427a1f51a3e7e1df",
+	"name" : "OsirisOBJ",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80
+			]
+		},
+		{
+			"name" : "Precompile Header File",
+			"sourceIndexes" : 
+			[
+				81,
+				82
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 0,
+			"compileGroupIndex" : 0,
+			"path" : "out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.cxx",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"compileGroupIndex" : 1,
+			"path" : "out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_demo.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_draw.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_freetype.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_stdlib.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_tables.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_widgets.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_impl_dx9.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 2,
+			"path" : "Dependencies/imgui/imgui_impl_win32.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/autofit/autofit.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/cff/cff.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/base/ftbase.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/base/ftbitmap.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/base/ftdebug.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/base/ftglyph.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/base/ftinit.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/base/ftsynth.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/base/ftsystem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/psaux/psaux.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/pshinter/pshinter.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/psnames/psnames.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/raster/raster.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/sfnt/sfnt.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/smooth/smooth.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/freetype/src/truetype/truetype.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/MinHook/buffer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/MinHook/hde/hde32.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/MinHook/hde/hde64.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/MinHook/hook.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 3,
+			"path" : "Dependencies/MinHook/trampoline.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Config.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/ConfigStructs.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Endpoints.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/EventListener.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/GameData.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/GlobalContext.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/GUI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Helpers.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hooks.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/imguiCustom.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InputUtil.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Memory.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Netvars.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/RetSpoofGadgets.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Texture.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/CSGO/EconItemView.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/CSGO/Entity.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/CSGO/GlobalVars.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/CSGO/KeyValues.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/CSGO/Utils.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Aimbot.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Backtrack.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Chams.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/EnginePrediction.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Glow.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Misc.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Sound.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/StreamProofESP.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Triggerbot.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hacks/Visuals.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Helpers/PatternFinder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hooks/VmtSwap.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hooks/MinHook.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/Hooks/VmtHook.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/InventoryChanger.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/InventoryConfig.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/WeaponNames.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/Backend/Request/RequestHandler.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/GameIntegration/CrateLoot.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/GameIntegration/Inventory.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/GameIntegration/Items.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/GameItems/Storage.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/Inventory/StructsFromJson.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/ItemGenerator/ItemGenerator.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/InventoryChanger/ItemGenerator/TournamentMatches.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/MemorySearch/HybridPatternFinder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/MemorySearch/PatternFinder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/MemorySearch/PatternFinderScalar.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 15,
+			"compileGroupIndex" : 2,
+			"path" : "Source/MemorySearch/PatternFinderSIMD.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"path" : "out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"path" : "out/build/x64-Debug/CMakeFiles/OsirisOBJ.dir/cmake_pch.hxx",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "OBJECT_LIBRARY"
+}

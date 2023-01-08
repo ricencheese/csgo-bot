@@ -1,0 +1,314 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						5,
+						17
+					],
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				},
+				{
+					"build" : "Dependencies",
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4
+					],
+					"jsonFile" : "directory-Dependencies-Debug-308b0f68eeb58b5b548d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "Dependencies"
+				},
+				{
+					"build" : "Dependencies/imgui",
+					"jsonFile" : "directory-Dependencies.imgui-Debug-d90e699e198dac2efcaa.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "Dependencies/imgui"
+				},
+				{
+					"build" : "Dependencies/freetype",
+					"jsonFile" : "directory-Dependencies.freetype-Debug-8cdad899ecabd97cf153.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "Dependencies/freetype"
+				},
+				{
+					"build" : "Dependencies/MinHook",
+					"jsonFile" : "directory-Dependencies.MinHook-Debug-71804711d12055b6aa61.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "Dependencies/MinHook"
+				},
+				{
+					"build" : "Source",
+					"childIndexes" : 
+					[
+						6,
+						7,
+						8,
+						9,
+						10,
+						16
+					],
+					"jsonFile" : "directory-Source-Debug-93ebefb0dc4084c9ccf4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "Source"
+				},
+				{
+					"build" : "Source/CSGO",
+					"jsonFile" : "directory-Source.CSGO-Debug-a23b4aa8c02479a23473.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 5,
+					"projectIndex" : 0,
+					"source" : "Source/CSGO"
+				},
+				{
+					"build" : "Source/Hacks",
+					"jsonFile" : "directory-Source.Hacks-Debug-c7461325a0c2eccecb50.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 5,
+					"projectIndex" : 0,
+					"source" : "Source/Hacks"
+				},
+				{
+					"build" : "Source/Helpers",
+					"jsonFile" : "directory-Source.Helpers-Debug-106900bc9ac90b21c8fa.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 5,
+					"projectIndex" : 0,
+					"source" : "Source/Helpers"
+				},
+				{
+					"build" : "Source/Hooks",
+					"jsonFile" : "directory-Source.Hooks-Debug-1de1275ecf0bbccee12d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 5,
+					"projectIndex" : 0,
+					"source" : "Source/Hooks"
+				},
+				{
+					"build" : "Source/InventoryChanger",
+					"childIndexes" : 
+					[
+						11,
+						12,
+						13,
+						14,
+						15
+					],
+					"jsonFile" : "directory-Source.InventoryChanger-Debug-5326dfa8709ffa85c037.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 5,
+					"projectIndex" : 0,
+					"source" : "Source/InventoryChanger"
+				},
+				{
+					"build" : "Source/InventoryChanger/Backend",
+					"jsonFile" : "directory-Source.InventoryChanger.Backend-Debug-d3ee28469744d65bc5ff.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 10,
+					"projectIndex" : 0,
+					"source" : "Source/InventoryChanger/Backend"
+				},
+				{
+					"build" : "Source/InventoryChanger/GameIntegration",
+					"jsonFile" : "directory-Source.InventoryChanger.GameIntegration-Debug-a61415e09f55d31b8c23.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 10,
+					"projectIndex" : 0,
+					"source" : "Source/InventoryChanger/GameIntegration"
+				},
+				{
+					"build" : "Source/InventoryChanger/GameItems",
+					"jsonFile" : "directory-Source.InventoryChanger.GameItems-Debug-de08c772570840281661.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 10,
+					"projectIndex" : 0,
+					"source" : "Source/InventoryChanger/GameItems"
+				},
+				{
+					"build" : "Source/InventoryChanger/Inventory",
+					"jsonFile" : "directory-Source.InventoryChanger.Inventory-Debug-183ff462104402a7f983.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 10,
+					"projectIndex" : 0,
+					"source" : "Source/InventoryChanger/Inventory"
+				},
+				{
+					"build" : "Source/InventoryChanger/ItemGenerator",
+					"jsonFile" : "directory-Source.InventoryChanger.ItemGenerator-Debug-f2577363b14bf54ace7d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 10,
+					"projectIndex" : 0,
+					"source" : "Source/InventoryChanger/ItemGenerator"
+				},
+				{
+					"build" : "Source/MemorySearch",
+					"jsonFile" : "directory-Source.MemorySearch-Debug-8280bed8c513eba09d16.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 5,
+					"projectIndex" : 0,
+					"source" : "Source/MemorySearch"
+				},
+				{
+					"build" : "Source/Resources/Shaders",
+					"jsonFile" : "directory-Source.Resources.Shaders-Debug-e3d8e61c39451a99f361.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "Source/Resources/Shaders",
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17
+					],
+					"name" : "Osiris",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Osiris::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Osiris-Debug-8e3d8352ef9fb6e9fc3f.json",
+					"name" : "Osiris",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "OsirisOBJ::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-OsirisOBJ-Debug-e688165a40f7c622659f.json",
+					"name" : "OsirisOBJ",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 17,
+					"id" : "Shaders::@f1be873c723ad378b0c8",
+					"jsonFile" : "target-Shaders-Debug-a9d85dbc15ee3075e93e.json",
+					"name" : "Shaders",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/ricencheese/Desktop/Osiris-master/out/build/x64-Debug",
+		"source" : "C:/Users/ricencheese/Desktop/Osiris-master"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}
