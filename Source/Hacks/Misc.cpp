@@ -198,6 +198,7 @@ struct BotzConfig {
     std::vector<int>openNodesParents, closedNodesParents;
     int currentNode{ 0 };
     bool pathFound{ false };
+    float dropdownDmg{ 0.f };
     std::vector<csgo::Trace>tracez;
     csgo::Vector checkOrigin;
     csgo::Vector tempFloorPos{ 0,0,0 };
@@ -1521,7 +1522,8 @@ int fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) n
 
 
 //return 0 if there's no way to get to desired position, 1 if you can walk to get to pos,
-//2 if you can get to pos by jumping,3 if you can get to pos by crouching, -1 if fuck you
+//2 if you can get to pos by jumping,3 if you can get to pos by crouching, 4 if dropping
+//down will cause you great pain (fall damage is over x% of health left)
 int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept {
 
     if (!localPlayer)
@@ -1533,7 +1535,8 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) no
     if (!engine.isInGame())
         return -1;
     botzConfig.tracez.clear();
-    fallDamageCheck(engineInterfaces,pos);
+    if (fallDamageCheck(engineInterfaces, pos) > localPlayer.get().health()*botzConfig.dropdownDmg)
+        return 4;
     pos.z = botzConfig.tempFloorPos.z;      //set node pos to floor height
 
     botzConfig.checkOrigin = { pos.x, pos.y, pos.z + 18 };//{ pos.x,pos.y,pos.z + 18.f };
@@ -2185,11 +2188,6 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                     ImGui::SliderFloat("botz goto position (Z)", &botzConfig.closedNodes[botzConfig.editWaypoint - 1].z, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
 
                 }
-                if(ImGui::Button("calculate fall height"))
-                    fallDamageCheck(engineInterfaces,botzConfig.waypoints[0]);
-                if (ImGui::Button("set pos to floor"))
-                    collisionCheck(engineInterfaces, botzConfig.waypoints[0]);
-                ImGui::Text(std::to_string(fallDamageCheck(engineInterfaces,botzConfig.waypoints[0])).c_str());
                 ImGui::Separator();
                 ImGui::SliderFloat("pos draw size", &botzConfig.posDrawSize, 1.0f, 10.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
             }
@@ -2197,6 +2195,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             ImGui::Checkbox("Should walk towards pos", &botzConfig.shouldwalk);
             ImGui::Separator();
             ImGui::Text("Pathfinding");
+            ImGui::SliderFloat("Max fall damage (%)", &botzConfig.dropdownDmg, 0.0f, 1.0f,"%.2f",ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderInt("Node radius", &botzConfig.nodeRadius, 1, 150);
             ImGui::Checkbox("Pathfinding debug", &botzConfig.pathfindingDebug);
             ImGui::Checkbox("Draw pathfinding traces", &botzConfig.drawPathfindingTraces);
