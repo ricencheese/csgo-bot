@@ -203,7 +203,7 @@ struct BotzConfig {
     csgo::Vector checkOrigin;
     csgo::Vector tempFloorPos{ 0,0,0 };
     //first: same as collisionCheck(); second: true if open, false if closed
-    std::pair<int, bool>nodeIndex;
+    std::vector<std::pair<int, bool>>nodeIndex;
 
 
     csgo::Vector playerPingLoc{ 0,0,0 };
@@ -1586,14 +1586,19 @@ void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
     
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
-    ImVec2 screenfeetpos;
     for (int index = 0; index < botzConfig.openNodes.size(); index++) {
         ImVec2 screenNodePos;
         Helpers::worldToScreenPixelAligned(botzConfig.openNodes[index], screenNodePos);
         dlist->AddRectFilled({ screenNodePos.x - 13.f,screenNodePos.y - 13.f }, { screenNodePos.x + 13.f,screenNodePos.y + 13.f }, 0xCC333333);
         dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y - 12.f }, 0xFFFFFFFF, std::to_string(index).c_str());
     }
-    if (botzConfig.tracez.size() == 0)
+    for (int index = 0; index < botzConfig.closedNodes.size(); index++) {
+        ImVec2 screenNodePos;
+        Helpers::worldToScreenPixelAligned(botzConfig.closedNodes[index], screenNodePos);
+        dlist->AddRectFilled({ screenNodePos.x - 13.f,screenNodePos.y - 13.f }, { screenNodePos.x + 13.f,screenNodePos.y + 13.f }, 0xCC333333);
+        dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y - 12.f }, 0xFFFFFFFF, std::to_string(index).c_str());
+    }
+    if (botzConfig.tracez.size() == 0||!botzConfig.drawPathfindingTraces)
         return;
     else {
             std::vector<ImVec2>traceScreenPosStart,traceScreenPosEnd;
@@ -1610,59 +1615,59 @@ void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
 
     }
             
-void Misc::pathfindBackup(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
-    if (!localPlayer)
-        return;
-    if (!localPlayer.get().isAlive())
-        return;
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-    if (!engine.isInGame())
-        return;
-    if (!botzConfig.shouldwalk)
-        return;
-    if (botzConfig.waypoints.size() < 1)
-        return;
-    csgo::Vector checkPos{ localPlayer.get().getAbsOrigin() };
-    checkPos.x += botzConfig.nodeRadius;
-    checkPos.y += botzConfig.nodeRadius;
+//void Misc::pathfindBackup(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
+//    if (!localPlayer)
+//        return;
+//    if (!localPlayer.get().isAlive())
+//        return;
+//    const csgo::Engine& engine = engineInterfaces.getEngine();
+//    if (!engine.isInGame())
+//        return;
+//    if (!botzConfig.shouldwalk)
+//        return;
+//    if (botzConfig.waypoints.size() < 1)
+//        return;
+//    csgo::Vector checkPos{ localPlayer.get().getAbsOrigin() };
+//    checkPos.x += botzConfig.nodeRadius;
+//    checkPos.y += botzConfig.nodeRadius;
+//
+//    for (int dial = 0; dial < 9; dial++) {      //dial bc
+//
+//        switch (dial) {
+//        case 0:break;
+//        case 1:checkPos.y -= botzConfig.nodeRadius; break;
+//        case 2:checkPos.y -= botzConfig.nodeRadius; break;
+//        case 3:checkPos.x -= botzConfig.nodeRadius; break;
+//        case 4:continue; break;
+//        case 5:checkPos.y += botzConfig.nodeRadius*2; break;
+//        case 6:checkPos.x -= botzConfig.nodeRadius; break;
+//        case 7:checkPos.y -= botzConfig.nodeRadius; break;
+//        case 8:checkPos.y -= botzConfig.nodeRadius; break;
+//        }
+//        botzConfig.nodes[dial] = checkPos;
+//
+//        botzConfig.gcost[dial]=checkPos.distTo(localPlayer.get().getAbsOrigin());
+//        botzConfig.hcost[dial]=checkPos.distTo(botzConfig.waypoints.front());
+//        botzConfig.fcost[dial]=botzConfig.gcost[dial]+botzConfig.hcost[dial];
+//        for (int index = 0; index < botzConfig.fcost.size(); index++) {
+//            if (botzConfig.walk[index] == false && botzConfig.crouchJump[index] == false)
+//                botzConfig.fcost[index] = 99999.f;
+//        }
+//        if (botzConfig.waypoints.size()==1) {
+//            botzConfig.waypoints.push_back(botzConfig.nodes[std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()))]);
+//            botzConfig.nodeType.first = std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()));
+//        }
+//    }
+//    if (botzConfig.lastCheckTime + 5 < memory.globalVars->realtime) {   //if bot gets stuck somewhere, set his temp waypoint to abs origin
+//        if (botzConfig.lastCheckPos.distTo(localPlayer.get().getAbsOrigin())<150.f) {
+//            botzConfig.waypoints[1] = localPlayer.get().getAbsOrigin();
+//        }
+//        botzConfig.lastCheckPos = localPlayer.get().getAbsOrigin();
+//        botzConfig.lastCheckTime = memory.globalVars->realtime;
+//    }
+//}
 
-    for (int dial = 0; dial < 9; dial++) {      //dial bc
-
-        switch (dial) {
-        case 0:break;
-        case 1:checkPos.y -= botzConfig.nodeRadius; break;
-        case 2:checkPos.y -= botzConfig.nodeRadius; break;
-        case 3:checkPos.x -= botzConfig.nodeRadius; break;
-        case 4:continue; break;
-        case 5:checkPos.y += botzConfig.nodeRadius*2; break;
-        case 6:checkPos.x -= botzConfig.nodeRadius; break;
-        case 7:checkPos.y -= botzConfig.nodeRadius; break;
-        case 8:checkPos.y -= botzConfig.nodeRadius; break;
-        }
-        botzConfig.nodes[dial] = checkPos;
-
-        botzConfig.gcost[dial]=checkPos.distTo(localPlayer.get().getAbsOrigin());
-        botzConfig.hcost[dial]=checkPos.distTo(botzConfig.waypoints.front());
-        botzConfig.fcost[dial]=botzConfig.gcost[dial]+botzConfig.hcost[dial];
-        for (int index = 0; index < botzConfig.fcost.size(); index++) {
-            if (botzConfig.walk[index] == false && botzConfig.crouchJump[index] == false)
-                botzConfig.fcost[index] = 99999.f;
-        }
-        if (botzConfig.waypoints.size()==1) {
-            botzConfig.waypoints.push_back(botzConfig.nodes[std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()))]);
-            botzConfig.nodeIndex.first = std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()));
-        }
-    }
-    if (botzConfig.lastCheckTime + 5 < memory.globalVars->realtime) {   //if bot gets stuck somewhere, set his temp waypoint to abs origin
-        if (botzConfig.lastCheckPos.distTo(localPlayer.get().getAbsOrigin())<150.f) {
-            botzConfig.waypoints[1] = localPlayer.get().getAbsOrigin();
-        }
-        botzConfig.lastCheckPos = localPlayer.get().getAbsOrigin();
-        botzConfig.lastCheckTime = memory.globalVars->realtime;
-    }
-}
-
-void addNeighborNodes(const EngineInterfaces& engineInterfaces,int nodeIndex) noexcept{
+void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
@@ -1724,17 +1729,25 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces,int nodeIndex) no
             continue;
         potentialOpen.z = botzConfig.tempFloorPos.z;
         botzConfig.closedNodes.push_back(potentialOpen);
+
         
     }
 }
 
-void openNode(int nodeIndex) noexcept {
+void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept {
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
         return;
 
-    
+    if (nodeIndex != 0) {
+        botzConfig.openNodes.push_back(botzConfig.closedNodes[nodeIndex]);
+        botzConfig.closedNodes.erase(botzConfig.closedNodes.begin() + nodeIndex);
+        int staticNodeIndex = std::distance(botzConfig.nodeIndex.begin(),std::find(botzConfig.nodeIndex.begin(), botzConfig.nodeIndex.end(), std::pair(nodeIndex, false)));
+        botzConfig.nodeIndex.erase(botzConfig.nodeIndex.begin()+staticNodeIndex);   //todo: crash here fix pls vector assignment out of range
+        botzConfig.nodeIndex.push_back(std::pair(nodeIndex, true));
+        botzConfig.currentNode = std::distance(botzConfig.openNodes.begin(), botzConfig.openNodes.end());
+    }
 }
 
 void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory,csgo::Vector endpos) noexcept {
@@ -1754,6 +1767,7 @@ void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memo
     //botzConfig.closedNodes.resize(2000);
     botzConfig.currentNode = 0;
     botzConfig.openNodes.push_back(localPlayer.get().getAbsOrigin());
+    addNeighborNodes(engineInterfaces);
             //check if the current node is the finish point
     //if (botzConfig.closedNodes.back().x - botzConfig.waypointApproximation<endpos.x &&       //todo: move this to uhhhhh checkIfPathIsFound() or something like that idk
     //    botzConfig.closedNodes.back().x + botzConfig.waypointApproximation>endpos.x &&       //crashes due to attempting to get std::vector::back() of an empty vector :P
@@ -1917,28 +1931,7 @@ void Misc::gotoBotzPos(csgo::UserCmd* cmd, const EngineInterfaces& engineInterfa
         return;
     if (botzConfig.waypoints.size()==0)
         return;
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-    csgo::Vector relAngle;
-    csgo::Vector worldpos{botzConfig.waypoints.back()};
-    relAngle = Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), worldpos, localPlayer.get().eyeAngles());
-                                //waypoint approximation will consider the point reached if the player is
-                                //within x units from the point i.e. the point is at x 1035 and approx is
-                                //15, the player will stop moving at 1035±15 and consider the point reached
-    if (botzConfig.waypoints.back().x - botzConfig.waypointApproximation < localPlayer.get().getEyePosition().x && localPlayer.get().getEyePosition().x < botzConfig.waypoints.back().x + botzConfig.waypointApproximation && botzConfig.waypoints.back().y - botzConfig.waypointApproximation < localPlayer.get().getEyePosition().y && localPlayer.get().getEyePosition().y < botzConfig.waypoints.back().y + botzConfig.waypointApproximation) {
-        botzConfig.waypoints.pop_back();
-        if (botzConfig.waypoints.front().x - botzConfig.waypointApproximation < localPlayer.get().getEyePosition().x && localPlayer.get().getEyePosition().x < botzConfig.waypoints.front().x + botzConfig.waypointApproximation && botzConfig.waypoints.front().y - botzConfig.waypointApproximation < localPlayer.get().getEyePosition().y && localPlayer.get().getEyePosition().y < botzConfig.waypoints.front().y + botzConfig.waypointApproximation)
-            pop_front(botzConfig.waypoints);
-    }
-    else {
-        //not in position yet, move closer/do other stuff while you're walking(todo)
-        if (botzConfig.crouchJump[botzConfig.nodeIndex.first] && !botzConfig.walk[botzConfig.nodeIndex.first] && localPlayer.get().isOnGround()){
-            cmd->buttons |= csgo::UserCmd::IN_DUCK;
-            cmd->buttons |= csgo::UserCmd::IN_JUMP;
-        }
-        cmd->forwardmove = 250 * cos(Helpers::deg2rad(relAngle.y));
-        cmd->sidemove = 250 * sin(Helpers::deg2rad(relAngle.y))*-1;
-    }
-    
+
 
 }
 
@@ -2180,8 +2173,10 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 }
                 if (ImGui::Button("find path"))
                     Misc::pathfind(engineInterfaces,memory,{0.f,0.f,0.f});
+                if(botzConfig.closedNodes.size()>0)
+                    ImGui::SliderInt("node # ", &botzConfig.currentNode, 0, botzConfig.closedNodes.size() - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
                 if (ImGui::Button("open neighbor nodes of node"))
-                    addNeighborNodes(engineInterfaces,0);
+                    openNode(engineInterfaces,botzConfig.currentNode);
                 if (botzConfig.closedNodes.size() > 0) {
                     ImGui::SliderFloat("botz goto position (X)", &botzConfig.closedNodes[botzConfig.editWaypoint - 1].x, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
                     ImGui::SliderFloat("botz goto position (Y)", &botzConfig.closedNodes[botzConfig.editWaypoint - 1].y, -32768.f, 32768.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
