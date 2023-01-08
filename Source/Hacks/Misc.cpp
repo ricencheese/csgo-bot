@@ -1553,15 +1553,15 @@ void Misc::collisionCheck(const EngineInterfaces& engineInterfaces) noexcept {
     for (int dial = 0; dial < 9; dial++) {      //dial bc
 
         switch (dial) {
-        case 0:break;                                                                                
-        case 1:checkPos.y -= botzConfig.nodeRadius; break;                                           
-        case 2:checkPos.y -= botzConfig.nodeRadius; break;                                           
-        case 3:checkPos.x -= botzConfig.nodeRadius; break;                                           
-        case 4:continue; break;                                                                      
-        case 5:checkPos.y += botzConfig.nodeRadius * 2; break;                                       
-        case 6:checkPos.x -= botzConfig.nodeRadius; break;                                           
-        case 7:checkPos.y -= botzConfig.nodeRadius; break;                                           
-        case 8:checkPos.y -= botzConfig.nodeRadius; break;                                           
+        case 0:break;
+        case 1:checkPos.y -= botzConfig.nodeRadius; break;
+        case 2:checkPos.y -= botzConfig.nodeRadius; break;
+        case 3:checkPos.x -= botzConfig.nodeRadius; break;
+        case 4:continue; break;
+        case 5:checkPos.y += botzConfig.nodeRadius * 2; break;
+        case 6:checkPos.x -= botzConfig.nodeRadius; break;
+        case 7:checkPos.y -= botzConfig.nodeRadius; break;
+        case 8:checkPos.y -= botzConfig.nodeRadius; break;
         }                                                                                            
                                                                                                      
         csgo::Trace htrace, htrace2, vtrace, htraceJump, htraceJump2;
@@ -1759,14 +1759,6 @@ void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memo
     if (!engine.isInGame())
         return;
 
-
-    botzConfig.openNodes.front() = localPlayer.get().getAbsOrigin();
-    botzConfig.currentNode = 0;
-    botzConfig.openNodesParents.front() = 0;
-    while (true) {
-        botzConfig.currentNode = std::distance(botzConfig.openNodes.begin(), std::min_element(botzConfig.openNodes.begin(), botzConfig.openNodes.end()));
-        botzConfig.closedNodes.push_back(botzConfig.openNodes[botzConfig.currentNode]);
-        botzConfig.openNodes.erase(std::min_element(botzConfig.openNodes.begin(), botzConfig.openNodes.end()));
                 //check if the current node is the finish point
         if (botzConfig.closedNodes[botzConfig.currentNode].x - botzConfig.waypointApproximation<endpos.x &&
             botzConfig.closedNodes[botzConfig.currentNode].x + botzConfig.waypointApproximation>endpos.x &&
@@ -1775,9 +1767,6 @@ void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memo
             botzConfig.closedNodes[botzConfig.currentNode].z - botzConfig.waypointApproximation<endpos.z &&
             botzConfig.closedNodes[botzConfig.currentNode].z + botzConfig.waypointApproximation>endpos.z)
                 return;
-
-
-    }
 }
 
 void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
