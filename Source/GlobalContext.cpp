@@ -84,11 +84,10 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
 
     memory->globalVars->serverTime(cmd);
 
-    //features->misc.collisionCheck(getEngineInterfaces());
+    features->misc.gotoBotzPos(getEngineInterfaces(), cmd);
     features->misc.findBreakable(getEngineInterfaces(),cmd);
-    features->misc.gotoBotzPos(cmd, getEngineInterfaces());
     features->misc.reload(cmd, *memory, getEngineInterfaces());
-
+    //features->misc.findPath(getEngineInterfaces());
 
 
 
@@ -105,7 +104,6 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     cmd->viewangles = previousViewAngles + viewAnglesDelta;
 
     cmd->viewangles.normalize();
-    features->misc.fixMovement(cmd, currentViewAngles.y);
 
     cmd->viewangles.x = std::clamp(cmd->viewangles.x, -89.0f, 89.0f);
     cmd->viewangles.y = std::clamp(cmd->viewangles.y, -180.0f, 180.0f);
@@ -158,29 +156,22 @@ int GlobalContext::svCheatsGetIntHook(void* _this, ReturnAddress returnAddress)
 
 void GlobalContext::frameStageNotifyHook(csgo::FrameStage stage)
 {
-    if (getEngineInterfaces().getEngine().isConnected() && !getEngineInterfaces().getEngine().isInGame())
-        features->misc.changeName(getEngineInterfaces().getEngine(), true, nullptr, 0.0f);
 
     if (stage == csgo::FrameStage::START)
         GameData::update(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getEngineInterfaces(), getOtherInterfaces(), *memory);
 
     if (stage == csgo::FrameStage::RENDER_START) {
-        features->misc.preserveKillfeed();
-        features->misc.disablePanoramablur();
         features->visuals.colorWorld();
-        features->misc.updateEventListeners(getEngineInterfaces());
         features->visuals.updateEventListeners();
     }
     if (getEngineInterfaces().getEngine().isInGame()) {
         features->visuals.skybox(stage);
         features->visuals.removeBlur(stage);
-        features->misc.oppositeHandKnife(stage);
         features->visuals.removeGrass(stage);
         features->visuals.modifySmoke(stage);
         features->visuals.disablePostProcessing(stage);
         features->visuals.removeVisualRecoil(stage);
         features->visuals.applyZoom(stage);
-        features->misc.fixAnimationLOD(getEngineInterfaces().getEngine(), stage);
         features->backtrack.update(getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, stage);
     }
     features->inventoryChanger.run(getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, stage);
@@ -257,8 +248,6 @@ const csgo::DemoPlaybackParameters* GlobalContext::getDemoPlaybackParametersHook
 {
     const auto params = hooks->engine.callOriginal<const csgo::DemoPlaybackParameters*, WIN32_LINUX(218, 219)>();
 
-    if (params)
-        return features->misc.getDemoPlaybackParametersHook(returnAddress, *params);
 
     return params;
 }
@@ -266,8 +255,6 @@ const csgo::DemoPlaybackParameters* GlobalContext::getDemoPlaybackParametersHook
 bool GlobalContext::dispatchUserMessageHook(csgo::UserMessageType type, int passthroughFlags, int size, const void* data)
 {
     features->misc.dispatchUserMessageHook(type, size, data);
-    if (type == csgo::UserMessageType::Text)
-        features->inventoryChanger.onUserTextMsg(*memory, data, size);
 
     return hooks->client.callOriginal<bool, 38>(type, passthroughFlags, size, data);
 }
@@ -276,8 +263,6 @@ bool GlobalContext::isPlayingDemoHook(ReturnAddress returnAddress, std::uintptr_
 {
     const auto result = hooks->engine.callOriginal<bool, 82>();
 
-    if (features->misc.isPlayingDemoHook(returnAddress, frameAddress))
-        return true;
 
     return result;
 }
@@ -521,31 +506,21 @@ void GlobalContext::fireGameEventCallback(csgo::GameEventPOD* eventPointer)
     switch (fnv::hashRuntime(event.getName())) {
     case fnv::hash(csgo::round_start):
         GameData::clearProjectileList();
-        features->misc.preserveKillfeed(true);
         [[fallthrough]];
     case fnv::hash(csgo::round_freeze_end):
-        features->misc.purchaseList(getEngineInterfaces().getEngine(), &event);
         break;
     case fnv::hash(csgo::player_death):
-        features->inventoryChanger.updateStatTrak(getEngineInterfaces().getEngine(), event);
-        features->inventoryChanger.overrideHudIcon(getEngineInterfaces().getEngine(), *memory, event);
-        features->misc.killMessage(getEngineInterfaces().getEngine(), event);
-        features->misc.killSound(getEngineInterfaces().getEngine(), event);
         features->misc.handleBotzEvents(*memory, getEngineInterfaces(), event, ClientInterfaces { retSpoofGadgets->client, * clientInterfaces },0);
         break;
     case fnv::hash(csgo::player_hurt):
-        features->misc.playHitSound(getEngineInterfaces().getEngine(), event);
         features->visuals.hitEffect(&event);
         features->visuals.hitMarker(&event);
         break;
     case fnv::hash(csgo::vote_cast):
-        features->misc.voteRevealer(event);
         break;
     case fnv::hash(csgo::round_mvp):
-        features->inventoryChanger.onRoundMVP(getEngineInterfaces().getEngine(), event);
         break;
     case fnv::hash(csgo::item_purchase):
-        features->misc.purchaseList(getEngineInterfaces().getEngine(), &event);
         break;
     case fnv::hash(csgo::bullet_impact):
         features->visuals.bulletTracer(event);
@@ -574,11 +549,9 @@ void GlobalContext::renderFrame()
 
         StreamProofESP::render(*memory, *config);
 
-        features->misc.drawPathfinding(getEngineInterfaces());
-        features->misc.drawBotzPos(ImGui::GetBackgroundDrawList());
         features->misc.chatOverhead(getEngineInterfaces(), *memory);
-
         features->misc.drawPath(getEngineInterfaces());
+        features->misc.drawPathfinding(getEngineInterfaces());
 
         features->visuals.thirdperson();
         features->aimbot.updateInput(*config);

@@ -579,7 +579,7 @@ void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& in
 
                 if (ImGui::Selectable(names[i])) {
                     switch (i) {
-                    case 0: config.reset(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory); updateColors(config); misc.updateClanTag(true); inventoryChanger.scheduleHudUpdate(interfaces); break;
+                    case 0: config.reset(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory); updateColors(config); inventoryChanger.scheduleHudUpdate(interfaces); break;
                     case 1: config.aimbot = { }; break;
                     case 2: config.triggerbot = { }; break;
                     case 3: backtrack.configure(configurator); break;
@@ -590,7 +590,7 @@ void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& in
                     case 8: inventoryChanger.reset(interfaces, memory); inventoryChanger.scheduleHudUpdate(interfaces); break;
                     case 9: Sound::resetConfig(); break;
                     case 10: config.style = { }; updateColors(config); break;
-                    case 11: misc.resetConfig(); misc.updateClanTag(true); break;
+                    case 11: misc.resetConfig(); break;
                     }
                 }
             }
@@ -601,7 +601,6 @@ void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& in
                 config.load(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, currentConfig, incrementalLoad);
                 updateColors(config);
                 inventoryChanger.scheduleHudUpdate(interfaces);
-                misc.updateClanTag(true);
             }
             if (ImGui::Button("Save selected", { 100.0f, 25.0f }))
                 config.save(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, currentConfig);

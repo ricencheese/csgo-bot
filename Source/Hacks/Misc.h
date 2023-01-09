@@ -49,40 +49,8 @@ public:
     float maxAngleDelta() noexcept;
     float aspectRatio() noexcept;
 
-    void edgejump(csgo::UserCmd* cmd) noexcept;
-    void slowwalk(csgo::UserCmd* cmd) noexcept;
-    void updateClanTag(bool = false) noexcept;
-    void spectatorList() noexcept;
-    void noscopeCrosshair(ImDrawList* drawlist) noexcept;
-    void recoilCrosshair(ImDrawList* drawList) noexcept;
-    void watermark() noexcept;
-    void prepareRevolver(const csgo::Engine& engine, csgo::UserCmd*) noexcept;
-    void fastPlant(const csgo::EngineTrace& engineTrace, csgo::UserCmd*) noexcept;
-    void fastStop(csgo::UserCmd*) noexcept;
-    void drawBombTimer() noexcept;
-    void stealNames(const csgo::Engine& engine) noexcept;
-    void disablePanoramablur() noexcept;
-    void quickReload(csgo::UserCmd*) noexcept;
-    bool changeName(const csgo::Engine& engine, bool, const char*, float) noexcept;
     void bunnyHop(csgo::UserCmd*) noexcept;
-    void fakeBan(const csgo::Engine& engine, bool = false) noexcept;
-    void nadePredict() noexcept;
-    void fixTabletSignal() noexcept;
-    void killMessage(const csgo::Engine& engine, const csgo::GameEvent& event) noexcept;
-    void fixMovement(csgo::UserCmd* cmd, float yaw) noexcept;
-    void antiAfkKick(csgo::UserCmd* cmd) noexcept;
-    void fixAnimationLOD(const csgo::Engine& engine, csgo::FrameStage stage) noexcept;
-    void autoPistol(csgo::UserCmd* cmd) noexcept;
-    void chokePackets(const csgo::Engine& engine, bool& sendPacket) noexcept;
-    void autoReload(csgo::UserCmd* cmd) noexcept;
-    void revealRanks(csgo::UserCmd* cmd) noexcept;
-    void autoStrafe(csgo::UserCmd* cmd) noexcept;
-    void removeCrouchCooldown(csgo::UserCmd* cmd) noexcept;
-    void moonwalk(csgo::UserCmd* cmd) noexcept;
-    void playHitSound(const csgo::Engine& engine, const csgo::GameEvent& event) noexcept;
-    void killSound(const csgo::Engine& engine, const csgo::GameEvent& event) noexcept;
-    void purchaseList(const csgo::Engine& engine, const csgo::GameEvent* event = nullptr) noexcept;
-    void oppositeHandKnife(csgo::FrameStage stage) noexcept;
+
     void runReportbot(const csgo::Engine& engine) noexcept;
     void resetReportbot() noexcept;
     void preserveKillfeed(bool roundStart = false) noexcept;
@@ -94,16 +62,14 @@ public:
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     //botzzzzzzzzzzz shit
     void aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept;
-    //void findDoors(const EngineInterfaces& engineInterfaces, csgo::UserCmd* cmd) noexcept;
     void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
     void drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept;
-    void pathfindBackup(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
-    void pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory, csgo::Vector endpos) noexcept;
+    void findPath(const EngineInterfaces& engineInterfaces) noexcept;
+    void pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     void drawPath(const EngineInterfaces& engineInterfaces) noexcept;
     void reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event,bool forceReport = false) noexcept;
     void reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
-    void gotoBotzPos(csgo::UserCmd* cmd, const EngineInterfaces& engineInterfaces) noexcept;
-    void drawBotzPos(ImDrawList* dlist) noexcept;
+    void gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
     void handleRadioCommands(const csgo::GameEvent& event, const EngineInterfaces& engineInterfaces) noexcept;
     void handleBotzEvents(const Memory& memory,const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, const ClientInterfaces& clientInterfaces,int eventType) noexcept;
 
