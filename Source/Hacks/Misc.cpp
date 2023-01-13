@@ -705,34 +705,7 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
 //}
 
 void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept {
-    if (!localPlayer)
-        return;
-    if (!localPlayer.get().isAlive())
-        return;
-    if (!botzConfig.isbotzon)
-        return;
-    if (!engineInterfaces.getEngine().isInGame())
-        return;
-
-    csgo::Trace traceXp; //front,back,right,left
-    botzConfig.localViewAngles = cmd->viewangles;
-    csgo::Vector viewangleshit{ localPlayer.get().getEyePosition().x + cos(Helpers::deg2rad(botzConfig.localViewAngles.y+19.9f*botzConfig.tracerayAngle)) * 60,
-                                localPlayer.get().getEyePosition().y + sin(Helpers::deg2rad(botzConfig.localViewAngles.y + 19.9f * botzConfig.tracerayAngle)) * 60,
-                                localPlayer.get().getEyePosition().z };
-    const csgo::Vector lPlayerEyes = localPlayer.get().getEyePosition();
-    engineInterfaces.engineTrace().traceRay({ lPlayerEyes, viewangleshit}, 0x2, localPlayer.get().getPOD(), traceXp);
-    if (botzConfig.tracerayAngle < 9)
-        botzConfig.tracerayAngle++;
-    else botzConfig.tracerayAngle = -9;
-    if (traceXp.fraction < 1.0f&&botzConfig.startedAiming==-1.f) {
-        botzConfig.aimspot = viewangleshit;
-        botzConfig.isShooterVisible = true;
-        botzConfig.aimreason = 3;
-    }
-    if (botzConfig.shouldFire) {
-        cmd->buttons |= csgo::UserCmd::IN_ATTACK;
-        botzConfig.shouldFire = false;
-    }
+ 
 }
 
 int fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept { 
@@ -754,264 +727,189 @@ int fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) n
     return int(fallDamage);
 }
 
-//return 0 if there's no way to get to desired position, 1 if you can walk to get to pos,
-//2 if you can get to pos by jumping,3 if you can get to pos by crouching, 4 if dropping
-//down will cause you great pain (fall damage is over x% of health left)
-int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept {
+void VectorAngles(const csgo::Vector& forward, csgo::Vector& angles)
+{
+    float tmp, yaw, pitch;
 
-    if (!localPlayer)
-        return -1;
-    //if (!botzConfig.shouldwalk)
-    //    return;
+    if (forward.y == 0 && forward.x == 0)
+    {
+        yaw = 0;
+        if (forward.z > 0)
+            pitch = 270;
+        else
+            pitch = 90;
+    }
+    else
+    {
+        yaw = (atan2(forward.y, forward.x) * 180 / 3.141592653f);
+        if (yaw < 0)
+            yaw += 360;
 
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-    if (!engine.isInGame())
-        return -1;
-    botzConfig.tracez.clear();
+        tmp = sqrtf(forward.x * forward.x + forward.y * forward.y);
+        pitch = (atan2(-forward.z, tmp) * 180 / 3.141592653f);
+        if (pitch < 0)
+            pitch += 360;
+    }
 
-    if (fallDamageCheck(engineInterfaces, pos) > localPlayer.get().health()*botzConfig.dropdownDmg)
-        return 4;
-
-    pos.z = botzConfig.tempFloorPos.z+18;      //set node pos to floor height
-
-    botzConfig.checkOrigin = { pos.x, pos.y, pos.z};//{ pos.x,pos.y,pos.z + 18.f };
-    //H for horizontal, V for vertical, D for diagonal
-    csgo::Trace traceHBottom1, traceHBottom2, traceHBottomD1, traceHBottomD2,traceHMiddle1,traceHMiddle2,traceHMiddleD1,traceHMiddleD2, traceHTop1, traceHTop2, traceHTopD1, traceHTopD2;
-    const csgo::EngineTrace Trace=engineInterfaces.engineTrace();
-
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottom1);
-    botzConfig.tracez.push_back(traceHBottom1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius/2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius/2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottom2);
-    botzConfig.tracez.push_back(traceHBottom2);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottomD1);
-    botzConfig.tracez.push_back(traceHBottomD1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottomD2);
-    botzConfig.tracez.push_back(traceHBottomD2);
-
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddle1);
-    botzConfig.tracez.push_back(traceHMiddle1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddle2);
-    botzConfig.tracez.push_back(traceHMiddle2);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddleD1);
-    botzConfig.tracez.push_back(traceHMiddleD1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddleD2);
-    botzConfig.tracez.push_back(traceHMiddleD2); 
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop1);
-    botzConfig.tracez.push_back(traceHTop1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop2);
-    botzConfig.tracez.push_back(traceHTop2);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD1);
-    botzConfig.tracez.push_back(traceHTopD1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD2);
-    botzConfig.tracez.push_back(traceHTopD2);
-
-    
-    const bool walkable{ (traceHBottom1.fraction == 1.0f && traceHBottom2.fraction == 1.0f && traceHBottomD1.fraction == 1.0f && traceHBottomD2.fraction == 1.0f) }, crouchable{ (traceHMiddle1.fraction == 1.0f && traceHMiddle2.fraction == 1.0f && traceHMiddleD1.fraction == 1.0f && traceHMiddleD2.fraction == 1.0f) }, jumpable{ (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f) };
-    
-    if (walkable && crouchable && jumpable) //just walk
-        return 1;
-    else if (!walkable && jumpable)              //jump
-        return 2;
-    else if (walkable && crouchable && !jumpable)//crouch
-        return 3;
-    else return 0;
+    angles.x = pitch;
+    angles.y = yaw;
+    angles.z = 0;
 }
+#define PI			3.14159265358979323846
+#define DEG2RAD(x) ((float)(x) * (float)((float)(PI) / 180.0f))
+#define RAD2DEG(x) ((float)(x) * (float)(180.0f / (float)(PI)))
+void AngleVectors(const csgo::Vector& angles, csgo::Vector& forward)
+{
 
+
+    float sp, sy, cp, cy;
+
+    sy = sin(DEG2RAD(angles.y));
+    cy = cos(DEG2RAD(angles.y));
+
+    sp = sin(DEG2RAD(angles.x));
+    cp = cos(DEG2RAD(angles.x));
+
+    forward.x = cp * cy;
+    forward.y = cp * sy;
+    forward.z = -sp;
+}
+csgo::Vector CalculateAngle(csgo::Vector src, csgo::Vector dst)
+{
+    csgo::Vector angles;
+
+    csgo::Vector delta = src - dst;
+    float hyp = delta.length2D();
+
+    angles.y = std::atanf(delta.y / delta.x) * 57.2957795131f;
+    angles.x = std::atanf(-delta.z / hyp) * -57.2957795131f;
+    angles.z = 0.0f;
+
+    if (delta.x >= 0.0f)
+        angles.y += 180.0f;
+
+    return angles;
+}
 void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
-    if (!botzConfig.isbotzon)
-        return;
-    if (!botzConfig.pathfindingDebug)
-        return;
-    if (!localPlayer)
-        return;
     
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-    if (!engine.isInGame())
-        return;
-    
-    ImDrawList* dlist;
-    dlist = ImGui::GetBackgroundDrawList();
-    if (botzConfig.nodes.size() > 0) {
-        for (int index = 0; index < botzConfig.nodes.size(); index++) {
-            ImVec2 screenNodePos;
-            Helpers::worldToScreenPixelAligned(botzConfig.nodes[index], screenNodePos);
-            dlist->AddRectFilled({ screenNodePos.x - 13.f,screenNodePos.y - 13.f }, { screenNodePos.x + 13.f,screenNodePos.y + 20.f }, 0xCC333333);
-            dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y - 13.f }, 0xFFFFFFFF, std::to_string(index).c_str());
-            dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y }, 0xFFFFFFFF, std::to_string(botzConfig.nodesParents[index]).c_str());
-            const char* walker{ "-" };
-            switch (botzConfig.walkType[index]) {
-            case 1:walker = "WALK"; break;
-            case 2:walker = "JUMP"; break;
-            case 3:walker = "CROUCH"; break;
-            default:walker = "-"; break;
-            }
-            dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y + 13.f }, 0xFFFFFFFF, walker);
-            dlist->AddText({ screenNodePos.x - 12, screenNodePos.y + 20.f }, 0xFFFFFFFF, std::to_string(botzConfig.fcost[index]).c_str());
-            dlist->AddText(ImVec2(500, 125), 0xFFFFFFFF, std::to_string(std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()))).c_str());
-        }
-    }
-    if (botzConfig.tracez.size() == 0||!botzConfig.drawPathfindingTraces)
-        return;
-    else {
-            std::vector<ImVec2>traceScreenPosStart,traceScreenPosEnd;
-            for (int index = 0; index < botzConfig.tracez.size(); index++) {
-                ImVec2 temp;
-                Helpers::worldToScreenPixelAligned(botzConfig.tracez[index].startpos, temp);
-                traceScreenPosStart.push_back(temp);
-                Helpers::worldToScreenPixelAligned(botzConfig.tracez[index].endpos, temp);
-                traceScreenPosEnd.push_back(temp);
+ }
+#include <deque>
+#define NODERADIUS 20.f
+#define TOTALNODEALONGRAY 8
+class CPathFinder {
+public:
+    struct Node_t {
+        csgo::Vector Pos;
+        float Radius;
+    };
+    void MoveTo(csgo::Vector pos, csgo::Vector origin, csgo::UserCmd* cmd, float wish_yaw) {
 
-                dlist->AddLine(traceScreenPosStart[index], traceScreenPosEnd[index], ((botzConfig.tracez[index].fraction < 1.0f || botzConfig.tracez[0].contents == 1) ? 0xDDFF0000 : 0xDD00FF00));
-            }
-        }
+            auto difference = origin - pos;
+
+        auto velocity = csgo::Vector(difference.x * cos(wish_yaw / 180.0f * 3.141592653f) + difference.y * sin(wish_yaw / 180.0f * 3.141592653f), difference.y * cos(wish_yaw / 180.0f * 3.141592653f) - difference.x * sin(wish_yaw / 180.0f * 3.141592653f), difference.z);
+        cmd->forwardmove = std::clamp(-velocity.x * 450, -450.f, 450.f);
+        cmd->sidemove = std::clamp(velocity.y * 450, -450.f, 450.f);
 
     }
+    csgo::Vector TraceLineWorldOnly(const EngineInterfaces& engineInterfaces, csgo::Vector start, csgo::Vector end, bool& visible) {
 
-void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
-    if (!localPlayer)
-        return;
-    if (!localPlayer.get().isAlive())
-        return;
 
-    for (int index = 0; index < 8; index++) {
-        csgo::Vector potentialOpen;
-        csgo::Vector offset{ 0,0,0 };
-        //2 3 4
-        //1 d 5
-        //0 7 6
-        switch (index) {
-        case 0:
-            offset.x = 0.f - botzConfig.nodeRadius;
-            offset.y = 0.f - botzConfig.nodeRadius;
-            offset.z = 0.f;
-            break;
-        case 1:
-            offset.x = 0.f - botzConfig.nodeRadius;
-            offset.y = 0.f;
-            offset.z = 0.f;
-            break;
-        case 2:
-            offset.x = 0.f - botzConfig.nodeRadius;
-            offset.y = 0.f + botzConfig.nodeRadius;
-            offset.z = 0.f;
-            break;
-        case 3:
-            offset.x = 0.f;
-            offset.y = 0.f + botzConfig.nodeRadius;
-            offset.z = 0.f;
-            break;
-        case 4:
-            offset.x = 0.f + botzConfig.nodeRadius;
-            offset.y = 0.f + botzConfig.nodeRadius;
-            offset.z = 0.f;
-            break;
-        case 5:
-            offset.x = 0.f + botzConfig.nodeRadius;
-            offset.y = 0.f;
-            offset.z = 0.f;
-            break;
-        case 6:
-            offset.x = 0.f + botzConfig.nodeRadius;
-            offset.y = 0.f - botzConfig.nodeRadius;
-            offset.z = 0.f;
-            break;
-        case 7:
-            offset.x = 0.f;
-            offset.y = 0.f - botzConfig.nodeRadius;
-            offset.z = 0.f;
-            break;
-        default:break;
+        csgo::Trace trace;
+
+
+        engineInterfaces.engineTrace().traceRay({ start, end }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), trace);
+     
+        visible = trace.fraction == 1.f;
+        return trace.endpos;
+    }
+    Node_t* GetClosestNode() {
+        //csgo::UserCmd*
+        Node_t* ClosestNode = nullptr;
+        if (!localPlayer)
+            return ClosestNode;
+        if (!localPlayer.get().isAlive())
+            return ClosestNode;
+        auto Pos = localPlayer.get().getAbsOrigin();
+        float Closest = FLT_MAX;
+        float ClosestToTarget = FLT_MAX;
+        float Distance = Closest;
+        float DistanceToTarget = Closest;
+        for (auto& Node : Path) {
+            Distance = (Node.Pos - Pos).squareLength();
+            DistanceToTarget = (Node.Pos - TargetNode.Pos).squareLength();
+            if (Distance < Closest && DistanceToTarget < ClosestToTarget) {
+                Closest = Distance;
+                ClosestToTarget = DistanceToTarget;
+                ClosestNode = &Node;
+            }
         }
-        potentialOpen = botzConfig.nodes[botzConfig.currentNode] + offset;
-        if (botzConfig.currentNode != -1)
-            botzConfig.fcost[botzConfig.currentNode] = 99999.f;
-        if (std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen) != botzConfig.nodes.end())
-            continue;
-        int collides = collisionCheck(engineInterfaces, potentialOpen);
-        if (collides == 0||collides==4)
-            continue;
-        potentialOpen.z = botzConfig.tempFloorPos.z;
-        botzConfig.nodes.push_back(potentialOpen);
-        botzConfig.nodesType.push_back(false);
-        botzConfig.nodesParents.push_back(botzConfig.currentNode);
-        botzConfig.walkType.push_back(collides);
-        botzConfig.fcost.push_back(botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()) + botzConfig.nodes.back().distTo(botzConfig.finalDestination));
-        
-        if (botzConfig.nodes.back().distTo(botzConfig.finalDestination) < botzConfig.nodeRadius-1.f)
-        {
-            botzConfig.pathFound = true;
+
+        return ClosestNode;
+    }
+    void GenerateNodes(Node_t& origin) {
+         
+    }
+    void MovePathForward(const EngineInterfaces& engineInterfaces) {
+    
+    }
+    void GeneratePathAlongRay(csgo::Vector start, csgo::Vector end, bool cache = false) {
+        csgo::Vector direction(0, 0, 0);
+        AngleVectors(CalculateAngle(start, end), direction);
+
+        for (int i = 1; i < TOTALNODEALONGRAY; i++) {
+            float mod = (float)(i / TOTALNODEALONGRAY);
+
+             Path.push_back(Node_t{ start + (direction * mod), NODERADIUS });
+            
+        }
+    }
+    void CalculatePath(const EngineInterfaces& engineInterfaces) {
+        bool ClearPath = false;
+        FoundPath = false;
+        TraceLineWorldOnly(engineInterfaces, Path[0].Pos, TargetNode.Pos, ClearPath);
+
+        if (ClearPath) {
+            //GeneratePathAlongRay(Path[0].Pos, TargetNode.Pos); doesnt work for some reason
+            Path.push_back(TargetNode);
+            FoundPath = true;
             return;
         }
     }
-}
 
-void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept {
-    if (!localPlayer)
-        return;
-    if (!localPlayer.get().isAlive())
-        return;
+    std::deque<Node_t> Path;
+    std::deque<Node_t> CacheNode;
+    bool FoundPath;
+    Node_t TargetNode;
 
-    if (nodeIndex != 0&&botzConfig.nodesType[nodeIndex]==false) {
-        botzConfig.currentNode = nodeIndex;
-        botzConfig.nodesType[nodeIndex] = true;
-        addNeighborNodes(engineInterfaces);
+    void GenerateNode(csgo::Vector pos, float radius) {
+        CacheNode.push_back(Node_t{ pos, radius });
     }
-}
+};
+CPathFinder PathFinder; //this is illegal but testing
+
 
 void Misc::findPath(const EngineInterfaces& engineInterfaces) noexcept {
-    if (!localPlayer||!localPlayer.get().isAlive())
-        return;
-    if (!(botzConfig.nodes.size() >0))
-        return;
-    if (!botzConfig.shouldwalk)
-        return;
-    if (botzConfig.finalDestination.distTo({0.f,0.f,0.f}) == 0.f)
-        return;
-
-    
-    if (!botzConfig.pathFound)
-        openNode(engineInterfaces, std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end())));
-    else {
-        if(botzConfig.curWayPoint == -2)
-            botzConfig.curWayPoint = (botzConfig.nodes.size() - 1);
-        while (botzConfig.curWayPoint != -1) {
-            botzConfig.waypoints.push_back(botzConfig.nodes[botzConfig.curWayPoint]);
-            botzConfig.waypointWalkType.push_back(botzConfig.walkType[botzConfig.curWayPoint]);
-            botzConfig.curWayPoint = botzConfig.nodesParents[botzConfig.curWayPoint];
-        }
-    }
+   //cm
 }
 
-
 void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
-    if (!botzConfig.isbotzon)
-        return;
+  //init
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
         return;
-    const csgo::Engine& engine=engineInterfaces.getEngine();
-    if (!engine.isInGame())
-        return;
-    //resett
-    botzConfig.pathFound = false;
-    botzConfig.nodes.clear();
-    botzConfig.nodesParents.clear();
-    botzConfig.nodesType.clear();
-    botzConfig.walkType.clear();
-    botzConfig.fcost.clear();
-    botzConfig.waypoints.clear();
-    botzConfig.currentNode = 0;
-    botzConfig.curWayPoint = -2;
-
-    botzConfig.nodes.push_back(localPlayer.get().getAbsOrigin());
-    fallDamageCheck(engineInterfaces, botzConfig.nodes.back());
-    botzConfig.nodes.back().z = botzConfig.tempFloorPos.z;
-    botzConfig.nodesType.push_back(true);
-    botzConfig.nodesParents.push_back(-1);
-    botzConfig.walkType.push_back(1);
-    botzConfig.fcost.push_back(999999.f);
-    addNeighborNodes(engineInterfaces);
+    PathFinder.Path.clear();
+    PathFinder.FoundPath = false;
+    PathFinder.CacheNode.clear();
+    //push origin node
+    //AngleVectors
+    csgo::Vector Forward;
+    AngleVectors(engineInterfaces.getEngine().getViewAngles(), Forward);
+    bool Buf = false;
+    csgo::Vector End = PathFinder.TraceLineWorldOnly(engineInterfaces, localPlayer.get().getEyePosition(), localPlayer.get().getEyePosition() + (Forward * 10000.f), Buf);
+    PathFinder.TargetNode = CPathFinder::Node_t{ End + csgo::Vector(0.f,0.f,13.f), NODERADIUS };
+    PathFinder.Path.push_back(CPathFinder::Node_t{ localPlayer.get().getAbsOrigin() + csgo::Vector(0.f,0.f,13.f), NODERADIUS });
+    PathFinder.CalculatePath(engineInterfaces);
 }
 
 void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
@@ -1019,98 +917,30 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
         return;
     if (!localPlayer.get().isAlive())
         return;
-    if (!botzConfig.circlesOrCost)
-        return;
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
-    const csgo::Engine engine = engineInterfaces.getEngine();
-    for (int index = 0; index < botzConfig.nodes.size(); index++) {
-        ImVec2 point1, point2, point3;
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius/4.f  ,botzConfig.nodes[index].y - botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                          , point1);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius/4.f  ,botzConfig.nodes[index].y + botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                          , point2);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x                              ,botzConfig.nodes[index].y                                ,botzConfig.nodes[index].z+botzConfig.nodeRadius/8.f }, point3);
-        if (point1.x < 1 || point2.x < 1 || point3.x < 1)
-            continue;
-        dlist->AddTriangleFilled(point1, point2, point3, (botzConfig.nodesType[index] ? 0xFF44AA44 : 0xFFAA4444));
-        ImVec2 point4,point5,point6;
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].y - botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                              , point4);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].y + botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                              , point5);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x                                ,botzConfig.nodes[index].y                                ,botzConfig.nodes[index].z + botzConfig.nodeRadius / 8.f }, point6);
-        if (point4.x < 1 || point5.x < 1 || point6.x < 1)
-            continue;
-        dlist->AddTriangleFilled(point4, point5, point6, (botzConfig.nodesType[index] ? 0xFF44AA44 : 0xFFAA4444));
-    }
-    std::vector<ImVec2> points;
-    if (botzConfig.waypoints.size() > 0) {
-        for (int index = 0; index < botzConfig.waypoints.size(); index++) {
-            points.push_back({ 0.f,0.f });
-            Helpers::worldToScreenPixelAligned(botzConfig.waypoints[index], points.back());
-        }
-        for (int index = 0; index < points.size(); index++) {
-            if (index != points.size() - 1)
-                dlist->AddLine(points[index], points[index + 1], 0xFF4444FF, 2.f);
-        }
+    auto ClosestNode = PathFinder.GetClosestNode();
 
+    if (PathFinder.FoundPath) {
+
+        for (auto& N : PathFinder.Path) {
+            ImVec2 tl, tr, bl, br;
+            bool IsTargetNode = ClosestNode != nullptr;
+            if (IsTargetNode) {
+                IsTargetNode = ClosestNode->Pos == N.Pos;
+            }
+            Helpers::worldToScreenPixelAligned(N.Pos + csgo::Vector(NODERADIUS * 0.5f, -NODERADIUS * 0.5f, 0), tr);
+            Helpers::worldToScreenPixelAligned(N.Pos + csgo::Vector(-NODERADIUS * 0.5f, -NODERADIUS * 0.5f, 0), tl);
+            Helpers::worldToScreenPixelAligned(N.Pos + csgo::Vector(NODERADIUS * 0.5f, NODERADIUS * 0.5f, 0), br);
+            Helpers::worldToScreenPixelAligned(N.Pos + csgo::Vector(-NODERADIUS * 0.5f, NODERADIUS * 0.5f, 0), bl);
+            dlist->AddTriangleFilled(tl, br, tr, IsTargetNode ? 0xFF44AA44 : 0xFFAA4444);
+            dlist->AddTriangleFilled(tl, br, bl, IsTargetNode ? 0xFF44AA44 : 0xFFAA4444);
+        }
     }
-    ImVec2 screenPosFinal;
-    Helpers::worldToScreenPixelAligned(botzConfig.finalDestination, screenPosFinal);
-    dlist->AddCircleFilled(screenPosFinal, 15.f, 0xFFAA4444, 8);
 }
 
 void Misc::reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, bool forceReport) noexcept {
 
-    if (!botzConfig.isbotzon||!botzConfig.shouldReportToTeam)
-        return;
-    if (!localPlayer)
-        return;
-    if (!localPlayer.get().isAlive())
-        return;
-
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-
-    const char* localCallout = localPlayer.get().lastPlaceName();
-    std::string say_team;
-    if (botzConfig.botState == 2) {
-        std::string say_team = "say_team \"i see an enemy at ";
-        say_team += localCallout;
-        say_team += "\"";
-    }
-    else if (botzConfig.botState == 6) {
-        csgo::PlayerInfo pinfo;
-        engine.getPlayerInfo(engine.getPlayerForUserID(event.getInt("attacker")), pinfo);
-        say_team = "say_team \"I died ";
-        if (botzConfig.reportDetailsCallout) {
-            say_team += " at ";
-            say_team += localCallout;
-        }
-        if (botzConfig.reportDetailsDiedTo) {
-            say_team += " to ";
-            say_team += (pinfo.fakeplayer ? "BOT " : "");
-            say_team += (event.getInt("attacker")==localPlayer.get().getUserId(engine) ? " my own " : pinfo.name);
-            if (event.getInt("attacker") != localPlayer.get().getUserId(engine))
-                say_team += "\'s";
-            say_team += event.getString("weapon");
-        }
-        say_team += "\"";
-    }
-    switch (botzConfig.botState) {
-        case 0:break;   //idling
-        case 1:break;   //in combat
-        case 2:         //see enemy
-            engine.clientCmdUnrestricted(say_team.c_str());
-            engine.clientCmdUnrestricted("needbackup");
-            botzConfig.botState = 1;
-            break;   
-        case 3:break;   //reloading
-        case 4:break;   //following teammate
-        case 5:break;   //throwing a grenade
-        case 6:         //bot just died
-            engine.clientCmdUnrestricted(say_team.c_str());
-            botzConfig.botState = 0;
-            break;   
-        case 7:break;   //defending bombsite
-        case 8:break;   //searching for c4
-    }
 }
 
 void Misc::reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept {
@@ -1152,44 +982,38 @@ void Misc::reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfac
 
 void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept{
     
-    if (!botzConfig.isbotzon|| !botzConfig.shouldwalk||!botzConfig.pathFound)
-        return;
+    //actual cm
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
         return;
-    if (botzConfig.nodes.size()<1)
-       return;
+ 
+    if (PathFinder.FoundPath) {
 
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-    csgo::Vector relAngle;
-    csgo::Vector worldpos;
-    worldpos = (botzConfig.waypoints.size() > 0 ? botzConfig.waypoints.back() :localPlayer.get().getAbsOrigin());
-    relAngle = Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), worldpos, localPlayer.get().eyeAngles());
-    //waypoint approximation will consider the point reached if the player is
-    //within x units from the point i.e. the point is at x 1035 and approx is
-    //15, the player will stop moving at 1035±15 and consider the point reached
-    if (botzConfig.waypoints.size() > 0) {
-        if ((localPlayer.get().getAbsOrigin().x - botzConfig.nodeRadius-1.f < botzConfig.waypoints.back().x && botzConfig.waypoints.back().x < localPlayer.get().getAbsOrigin().x + botzConfig.nodeRadius-1.f) &&
-            (localPlayer.get().getAbsOrigin().y - botzConfig.nodeRadius-1.f < botzConfig.waypoints.back().y && botzConfig.waypoints.back().y < localPlayer.get().getAbsOrigin().y + botzConfig.nodeRadius-1.f) &&
-            (localPlayer.get().getAbsOrigin().z-50.f<botzConfig.waypoints.back().z&&botzConfig.waypoints.back().z<localPlayer.get().getAbsOrigin().z+50.f)) {
-                botzConfig.waypoints.pop_back();
-                botzConfig.waypointWalkType.pop_back();
+        float oYaw = engineInterfaces.getEngine().getViewAngles().y;
+        auto ClosestNode = PathFinder.GetClosestNode();
+        if (!ClosestNode)
+            return;
+
+        auto Pos = localPlayer.get().getAbsOrigin();
+        PathFinder.MoveTo(ClosestNode->Pos, Pos, cmd, oYaw);
+        if (Pos.distTo(PathFinder.TargetNode.Pos) < NODERADIUS) {
+            PathFinder.FoundPath = false;
         }
-        else {
-            //not in position yet, move closer/do other stuff while you're walking(todo)
-            if (botzConfig.waypointWalkType.back() > 1) {
-                cmd->buttons |= csgo::UserCmd::IN_DUCK;
+        int ToRemove = -1;
+        int PathIndex = 0;
+        for (auto& N : PathFinder.Path) {
+            if (Pos.distTo(N.Pos) < NODERADIUS) {
+                ToRemove = PathIndex;
             }
-            if (botzConfig.waypointWalkType.back() == 2)
-                cmd->buttons |= csgo::UserCmd::IN_JUMP;
-            cmd->forwardmove = 250 * cos(Helpers::deg2rad(relAngle.y));
-            cmd->sidemove = 250 * sin(Helpers::deg2rad(relAngle.y)) * -1;
+            PathIndex++;
+        }
+
+        if (ToRemove != -1) {
+            //PathIndex
+            PathFinder.Path.erase(PathFinder.Path.begin() + ToRemove);
         }
     }
-
-
-
 
 }
 
@@ -1221,7 +1045,7 @@ void Misc::handleRadioCommands(const csgo::GameEvent& event, const EngineInterfa
     }
 }
 
-void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event,const ClientInterfaces& clientInterfaces, int eventType) noexcept {
+void Misc::handleBotzEvents(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, const ClientInterfaces& clientInterfaces, int eventType) noexcept {
     if (!localPlayer)                                                                                                    //eventTypes:
         return;                                                                                                          //0: player_death      1: player_hurt      2: round_start
     if (!botzConfig.isbotzon)                                                                                            //3: bomb_planted      4: bomb_defused     5: bomb_exploded
@@ -1229,11 +1053,11 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
     const csgo::Engine& engine = engineInterfaces.getEngine();                                                           //9: round_mvp         10:item_purchase    11:bullet_impact
     std::string eventName = event.getName();                                                                             //12:weapon_fire      13:player_ping
     eventName += "!";
-    engine.clientCmdUnrestricted(eventName.c_str());                                                                       
+    engine.clientCmdUnrestricted(eventName.c_str());
     const auto localUserId = localPlayer.get().getUserId(engine);
     std::string printToConsole;
     const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(engine.getPlayerForUserID(event.getInt("userid"))));
-    switch(eventType){                                                                                                   
+    switch (eventType) {
     case 0:
         if (entity.isOtherEnemy(memory, localPlayer.get())) {
             if (int(fmod(memory.globalVars->realtime, botzConfig.complimentChance)) == 0) {
@@ -1264,7 +1088,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         Misc::handleRadioCommands(event, engineInterfaces);
         break;
     case 12:
-        
+
         if (entity.getPOD() == localPlayer.get().getPOD())
             break;
         if (!entity.isOtherEnemy(memory, localPlayer.get()))
@@ -1284,11 +1108,13 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         printToConsole += std::to_string(botzConfig.aimspot.z);
         printToConsole += ")";
         engine.clientCmdUnrestricted(printToConsole.c_str());
-        
+
         if (entity.isVisible(engineInterfaces.engineTrace(), localPlayer.get().getEyePosition())) {
-            botzConfig.isShooterVisible = true;}
+            botzConfig.isShooterVisible = true;
+        }
         else {
-            botzConfig.isShooterVisible = false;}
+            botzConfig.isShooterVisible = false;
+        }
 
         if (botzConfig.startedAiming + botzConfig.reactionTime < memory.globalVars->realtime) {
             botzConfig.startedAiming = memory.globalVars->realtime;
@@ -1303,7 +1129,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         break;
     default:break;
     }
-    
+
 
 }
 
@@ -1417,10 +1243,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             if (botzConfig.shouldDebug) {
                 if (ImGui::Button("find path"))
                     Misc::pathfind(engineInterfaces,memory);
-                if(botzConfig.nodes.size()>0)
-                    ImGui::SliderInt("node # ", &botzConfig.currentNode, 0, botzConfig.nodes.size() - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
-                if (ImGui::Button("open neighbor nodes of node"))
-                    openNode(engineInterfaces,botzConfig.currentNode);
+              
                 ImGui::Separator();
             }
             //ImGui::SliderFloat("Waypoint approximation amount", &botzConfig.nodeRadius, 1.f, 150.f);
