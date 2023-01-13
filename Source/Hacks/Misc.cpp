@@ -822,6 +822,45 @@ public:
         visible = trace.fraction == 1.f;
         return trace.endpos;
     }
+    Node_t* GetClosestNode(csgo::Vector Pos, int* index) {
+        Node_t* ClosestNode = nullptr;
+        if (!localPlayer)
+            return ClosestNode;
+
+        float Closest = FLT_MAX;
+        float Distance = Closest;
+        int tempindex = 0;
+        for (auto& Node : Path) {
+            Distance = (Node.Pos - Pos).squareLength();
+         
+            if (Distance < Closest) {
+                Closest = Distance;
+                ClosestNode = &Node;
+                if (index)
+                    *index = tempindex;
+            }
+            tempindex++;
+        }
+
+        return ClosestNode;
+    }
+    void OptimizePath() {
+        CacheNode.clear();
+        CacheNode = Path;
+        Path.clear();
+
+        auto Node = CacheNode.begin();
+        for (int i = 0; i < CacheNode.size(); i++) {
+            int Index = 0;
+            Path.push_back(Node_t{ Node->Pos, Node->Radius });
+            Node_t* Closest = GetClosestNode(Node->Pos, &Index);
+            if (Closest) {
+                Node = CacheNode.begin() + Index;
+            }
+            Node++;
+        }
+        CacheNode.clear();
+    }
     Node_t* GetClosestNode() {
         //csgo::UserCmd*
         Node_t* ClosestNode = nullptr;
@@ -847,7 +886,7 @@ public:
         return ClosestNode;
     }
     void GenerateNodes(Node_t& origin) {
-         
+   
     }
     void MovePathForward(const EngineInterfaces& engineInterfaces) {
     
@@ -871,9 +910,11 @@ public:
         if (ClearPath) {
             //GeneratePathAlongRay(Path[0].Pos, TargetNode.Pos); doesnt work for some reason
             Path.push_back(TargetNode);
+            OptimizePath();
             FoundPath = true;
             return;
         }
+
     }
 
     std::deque<Node_t> Path;
