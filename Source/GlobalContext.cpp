@@ -87,7 +87,7 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     features->misc.gotoBotzPos(getEngineInterfaces(), cmd);
     features->misc.findBreakable(getEngineInterfaces(),cmd);
     features->misc.reload(cmd, *memory, getEngineInterfaces());
-    //features->misc.findPath(getEngineInterfaces());
+    features->misc.findPath(getEngineInterfaces());
 
 
 

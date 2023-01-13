@@ -196,9 +196,10 @@ struct BotzConfig {
     csgo::Vector checkOrigin{ 0,0,0 };
     csgo::Vector tempFloorPos{ 0,0,0 };
     csgo::Vector finalDestination{ 0.f,0.f,0.f};
-    float waypointApproximation{ 15.f };
+    //float nodeRadius-1.f{ 32.f };    //todo: replace with nodeRadius-1.f
     std::vector<csgo::Vector> waypoints;
     std::vector<int> waypointWalkType;
+    int curWayPoint{ -2 };
 
     csgo::Vector playerPingLoc{ 0,0,0 };
 
@@ -830,22 +831,24 @@ void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
     
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
-    for (int index = 0; index < botzConfig.nodes.size(); index++) {
-        ImVec2 screenNodePos;
-        Helpers::worldToScreenPixelAligned(botzConfig.nodes[index], screenNodePos);
-        dlist->AddRectFilled({ screenNodePos.x - 13.f,screenNodePos.y - 13.f }, { screenNodePos.x + 13.f,screenNodePos.y + 20.f }, 0xCC333333);
-        dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y - 13.f }, 0xFFFFFFFF, std::to_string(index).c_str());
-        dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y }, 0xFFFFFFFF, std::to_string(botzConfig.nodesParents[index]).c_str());
-        const char* walker{"-"};
-        switch (botzConfig.walkType[index]) {
-        case 1:walker = "WALK"; break;
-        case 2:walker = "JUMP"; break;
-        case 3:walker = "CROUCH"; break;
-        default:walker = "-"; break;
+    if (botzConfig.nodes.size() > 0) {
+        for (int index = 0; index < botzConfig.nodes.size(); index++) {
+            ImVec2 screenNodePos;
+            Helpers::worldToScreenPixelAligned(botzConfig.nodes[index], screenNodePos);
+            dlist->AddRectFilled({ screenNodePos.x - 13.f,screenNodePos.y - 13.f }, { screenNodePos.x + 13.f,screenNodePos.y + 20.f }, 0xCC333333);
+            dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y - 13.f }, 0xFFFFFFFF, std::to_string(index).c_str());
+            dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y }, 0xFFFFFFFF, std::to_string(botzConfig.nodesParents[index]).c_str());
+            const char* walker{ "-" };
+            switch (botzConfig.walkType[index]) {
+            case 1:walker = "WALK"; break;
+            case 2:walker = "JUMP"; break;
+            case 3:walker = "CROUCH"; break;
+            default:walker = "-"; break;
+            }
+            dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y + 13.f }, 0xFFFFFFFF, walker);
+            dlist->AddText({ screenNodePos.x - 12, screenNodePos.y + 20.f }, 0xFFFFFFFF, std::to_string(botzConfig.fcost[index]).c_str());
+            dlist->AddText(ImVec2(500, 125), 0xFFFFFFFF, std::to_string(std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()))).c_str());
         }
-        dlist->AddText({ screenNodePos.x - 12.f,screenNodePos.y + 13.f }, 0xFFFFFFFF, walker);
-        dlist->AddText({ screenNodePos.x - 12, screenNodePos.y + 20.f }, 0xFFFFFFFF, std::to_string(botzConfig.fcost[index]).c_str());
-        dlist->AddText(ImVec2(500, 125), 0xFFFFFFFF, std::to_string(std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end()))).c_str());
     }
     if (botzConfig.tracez.size() == 0||!botzConfig.drawPathfindingTraces)
         return;
@@ -932,8 +935,9 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         botzConfig.nodesType.push_back(false);
         botzConfig.nodesParents.push_back(botzConfig.currentNode);
         botzConfig.walkType.push_back(collides);
+        botzConfig.fcost.push_back(botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()) + botzConfig.nodes.back().distTo(botzConfig.finalDestination));
         
-        if (botzConfig.nodes.back().distTo(botzConfig.finalDestination) < botzConfig.waypointApproximation)
+        if (botzConfig.nodes.back().distTo(botzConfig.finalDestination) < botzConfig.nodeRadius-1.f)
         {
             botzConfig.pathFound = true;
             return;
@@ -957,22 +961,27 @@ void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept 
 void Misc::findPath(const EngineInterfaces& engineInterfaces) noexcept {
     if (!localPlayer||!localPlayer.get().isAlive())
         return;
-
+    if (!(botzConfig.nodes.size() >0))
+        return;
     if (!botzConfig.shouldwalk)
         return;
     if (botzConfig.finalDestination.distTo({0.f,0.f,0.f}) == 0.f)
         return;
 
-    openNode(engineInterfaces, std::distance(botzConfig.fcost.begin(),std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end())));
-    if (botzConfig.pathFound) {
-        for (int index = botzConfig.nodes.size() - 1; index > 0; index--) {
-            botzConfig.waypoints.push_back(botzConfig.nodes[botzConfig.nodesParents[index]]);
-            botzConfig.waypointWalkType.push_back(botzConfig.walkType[botzConfig.nodesParents[index]]);
-            if (botzConfig.nodesParents[index] == -1)
-                return;
+    
+    if (!botzConfig.pathFound)
+        openNode(engineInterfaces, std::distance(botzConfig.fcost.begin(), std::min_element(botzConfig.fcost.begin(), botzConfig.fcost.end())));
+    else {
+        if(botzConfig.curWayPoint == -2)
+            botzConfig.curWayPoint = (botzConfig.nodes.size() - 1);
+        while (botzConfig.curWayPoint != -1) {
+            botzConfig.waypoints.push_back(botzConfig.nodes[botzConfig.curWayPoint]);
+            botzConfig.waypointWalkType.push_back(botzConfig.walkType[botzConfig.curWayPoint]);
+            botzConfig.curWayPoint = botzConfig.nodesParents[botzConfig.curWayPoint];
         }
     }
 }
+
 
 void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
     if (!botzConfig.isbotzon)
@@ -993,6 +1002,7 @@ void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memo
     botzConfig.fcost.clear();
     botzConfig.waypoints.clear();
     botzConfig.currentNode = 0;
+    botzConfig.curWayPoint = -2;
 
     botzConfig.nodes.push_back(localPlayer.get().getAbsOrigin());
     fallDamageCheck(engineInterfaces, botzConfig.nodes.back());
@@ -1160,9 +1170,11 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
     //within x units from the point i.e. the point is at x 1035 and approx is
     //15, the player will stop moving at 1035±15 and consider the point reached
     if (botzConfig.waypoints.size() > 0) {
-        if (botzConfig.waypoints.back().distTo(localPlayer.get().getAbsOrigin()) < botzConfig.waypointApproximation) {
-            botzConfig.waypoints.pop_back();
-            botzConfig.waypointWalkType.pop_back();
+        if ((localPlayer.get().getAbsOrigin().x - botzConfig.nodeRadius-1.f < botzConfig.waypoints.back().x && botzConfig.waypoints.back().x < localPlayer.get().getAbsOrigin().x + botzConfig.nodeRadius-1.f) &&
+            (localPlayer.get().getAbsOrigin().y - botzConfig.nodeRadius-1.f < botzConfig.waypoints.back().y && botzConfig.waypoints.back().y < localPlayer.get().getAbsOrigin().y + botzConfig.nodeRadius-1.f) &&
+            (localPlayer.get().getAbsOrigin().z-50.f<botzConfig.waypoints.back().z&&botzConfig.waypoints.back().z<localPlayer.get().getAbsOrigin().z+50.f)) {
+                botzConfig.waypoints.pop_back();
+                botzConfig.waypointWalkType.pop_back();
         }
         else {
             //not in position yet, move closer/do other stuff while you're walking(todo)
@@ -1411,12 +1423,10 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                     openNode(engineInterfaces,botzConfig.currentNode);
                 ImGui::Separator();
             }
-            ImGui::SliderFloat("Waypoint approximation amount", &botzConfig.waypointApproximation, 1.f, 150.f);
+            //ImGui::SliderFloat("Waypoint approximation amount", &botzConfig.nodeRadius, 1.f, 150.f);
             ImGui::Checkbox("Should walk towards pos", &botzConfig.shouldwalk);
             ImGui::Separator();
             ImGui::Text("Pathfinding");
-            if (ImGui::Button("Next step"))
-                Misc::findPath(engineInterfaces);
             ImGui::SliderFloat("Max fall damage (%)", &botzConfig.dropdownDmg, 0.0f, 1.0f,"%.2f",ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderInt("Node radius", &botzConfig.nodeRadius, 1, 150);
             ImGui::Checkbox("Pathfinding debug", &botzConfig.pathfindingDebug);
