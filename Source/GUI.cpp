@@ -72,8 +72,12 @@ GUI::GUI() noexcept
         const std::filesystem::path path{ pathToFonts };
         CoTaskMemFree(pathToFonts);
 
-        fonts.normal15px = io.Fonts->AddFontFromFileTTF((path / "tahoma.ttf").string().c_str(), 15.0f, &cfg, Helpers::getFontGlyphRanges());
+        fonts.normal15px = io.Fonts->AddFontFromFileTTF(("C:\\dosapp.ttf"), 15.0f, &cfg, Helpers::getFontGlyphRanges());
         if (!fonts.normal15px)
+            io.Fonts->AddFontDefault(&cfg);
+
+        fonts.titleFont = io.Fonts->AddFontFromFileTTF(("C:\\ssans.ttf"), 24.0f, &cfg, Helpers::getFontGlyphRanges());
+        if (!fonts.titleFont)
             io.Fonts->AddFontDefault(&cfg);
 
         cfg.MergeMode = true;
@@ -106,6 +110,7 @@ void GUI::render(Misc& misc, inventory_changer::InventoryChanger& inventoryChang
     //inventoryChanger.drawGUI(interfaces, memory, false);
     //Sound::drawGUI(false);
     renderStyleWindow(config);
+    ImGui::PushFont(fonts.titleFont);
     misc.drawGUI(visuals, inventoryChanger, glow, engineInterfaces, false);
     renderConfigWindow(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, config);
 }
@@ -142,21 +147,21 @@ static void menuBarItem(const char* name, bool& enabled) noexcept
 
 void GUI::renderMenuBar(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals) noexcept
 {
-    if (ImGui::BeginMainMenuBar()) {
-        //menuBarItem("Aimbot", window.aimbot);
-        //menuBarItem("Triggerbot", window.triggerbot);
-        //backtrack.menuBarItem();
-        glow.menuBarItem();
-        menuBarItem("Chams", window.chams);
-        StreamProofESP::menuBarItem();
-        visuals.menuBarItem();
-        //inventoryChanger.menuBarItem();
-        //Sound::menuBarItem();
-        //menuBarItem("Style", window.style);
-        misc.menuBarItem();
-        menuBarItem("Config", window.config);
-        ImGui::EndMainMenuBar();   
-    }
+    //if (ImGui::BeginMainMenuBar()) {
+    //    //menuBarItem("Aimbot", window.aimbot);
+    //    //menuBarItem("Triggerbot", window.triggerbot);
+    //    //backtrack.menuBarItem();
+    //    glow.menuBarItem();
+    //    menuBarItem("Chams", window.chams);
+    //    StreamProofESP::menuBarItem();
+    //    visuals.menuBarItem();
+    //    //inventoryChanger.menuBarItem();
+    //    //Sound::menuBarItem();
+    //    //menuBarItem("Style", window.style);
+    //    misc.menuBarItem();
+    //    menuBarItem("Config", window.config);
+    //    ImGui::EndMainMenuBar();   
+    //}
 }
 
 void GUI::renderAimbotWindow(Config& config, bool contentOnly) noexcept

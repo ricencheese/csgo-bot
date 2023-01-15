@@ -17,6 +17,7 @@ public:
     void render(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Config& config) noexcept;
     void handleToggle(Misc& misc, const OtherInterfaces& interfaces) noexcept;
     [[nodiscard]] bool isOpen() const noexcept { return open; }
+
 private:
     bool open = true;
 
@@ -40,6 +41,7 @@ private:
 
     struct {
         ImFont* normal15px = nullptr;
+        ImFont* titleFont = nullptr;
     } fonts;
 
     float timeToNextConfigRefresh = 0.1f;

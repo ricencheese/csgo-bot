@@ -60,6 +60,7 @@ public:
     //chatting
     void readChat(const void* data, int size) noexcept;
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
+    void chatBot(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     //botzzzzzzzzzzz shit
     void aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept;
     void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;

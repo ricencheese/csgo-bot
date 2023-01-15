@@ -170,18 +170,17 @@ struct MiscConfig {
     int playeruid=-1;
     float messageLoggedAt = 0.f;
     OffscreenEnemies offscreenEnemies;
+    int guiTab = 0;
 } miscConfig;
 
 struct BotzConfig {
-    csgo::UserCmd* cmd;
 
     bool isbotzon{ false };
 
     int botState = 0;
 
     bool shouldwalk{ false };               //walkbot vars
-  
-
+    
     std::vector<csgo::Vector> nodes;//node positions
     std::vector<bool> nodesType;    //true if a node is open,false if closed
     std::vector<int>nodesParents;   //index of the parent node
@@ -200,6 +199,7 @@ struct BotzConfig {
     std::vector<csgo::Vector> waypoints;
     std::vector<int> waypointWalkType;
     int curWayPoint{ -2 };
+    bool shouldGoTowardsPing{ false };
 
     csgo::Vector playerPingLoc{ 0,0,0 };
 
@@ -239,7 +239,8 @@ struct BotzConfig {
     bool reportDetailsCallout{ true };
     bool reportDetailsDiedTo{ true };
 
-    float complimentChance{ true };
+    bool shouldCompliment{ true };
+    float complimentChance{1.f};
 
 } botzConfig;
 
@@ -646,6 +647,11 @@ void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& m
     }
 }
 
+void Misc::chatBot(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
+    if (!localPlayer)
+        return;
+
+}
 //botz stuff
 
 void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept {
@@ -736,7 +742,7 @@ void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd*
 }
 
 int fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept { 
-    if (!localPlayer)//todo: add like a bool to check if you want to print the falldamage value to the console
+    if (!localPlayer)
         return -1;
     if (!localPlayer.get().isAlive())
         return -1;
@@ -744,11 +750,11 @@ int fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) n
 
     csgo::Trace trace;
     float fallHeight,fallDamage;
-                                                                
-    engineInterfaces.engineTrace().traceRay({ pos,{pos.x,pos.y,pos.z - 1500.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), trace);
+
+    engineInterfaces.engineTrace().traceRay({ {pos.x,pos.y,pos.z+40.f},{pos.x,pos.y,pos.z - 1000.f}}, MASK_PLAYERSOLID, localPlayer.get().getPOD(), trace);
     fallHeight = pos.distTo(trace.endpos);
-    botzConfig.tempFloorPos = { pos.x,pos.y,pos.z - fallHeight };
-    fallDamage = -0.000128943f * pow(fallHeight, 2.f) + 0.341019f * fallHeight - 65.806f;
+    botzConfig.tempFloorPos = { trace.endpos };
+    fallDamage = -0.000128943f * pow(fallHeight, 2.f) + 0.341019f * (fallHeight-40.f) - 65.806f;
 
 
     return int(fallDamage);
@@ -757,7 +763,7 @@ int fallDamageCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) n
 //return 0 if there's no way to get to desired position, 1 if you can walk to get to pos,
 //2 if you can get to pos by jumping,3 if you can get to pos by crouching, 4 if dropping
 //down will cause you great pain (fall damage is over x% of health left)
-int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) noexcept {
+int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos,csgo::Vector parentpos) noexcept {
 
     if (!localPlayer)
         return -1;
@@ -772,7 +778,7 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) no
     if (fallDamageCheck(engineInterfaces, pos) > localPlayer.get().health()*botzConfig.dropdownDmg)
         return 4;
 
-    pos.z = botzConfig.tempFloorPos.z+18;      //set node pos to floor height
+    pos.z = botzConfig.tempFloorPos.z+18.f;      //set node pos to floor height
 
     botzConfig.checkOrigin = { pos.x, pos.y, pos.z};//{ pos.x,pos.y,pos.z + 18.f };
     //H for horizontal, V for vertical, D for diagonal
@@ -806,13 +812,15 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos) no
     botzConfig.tracez.push_back(traceHTopD2);
 
     
-    const bool walkable{ (traceHBottom1.fraction == 1.0f && traceHBottom2.fraction == 1.0f && traceHBottomD1.fraction == 1.0f && traceHBottomD2.fraction == 1.0f) }, crouchable{ (traceHMiddle1.fraction == 1.0f && traceHMiddle2.fraction == 1.0f && traceHMiddleD1.fraction == 1.0f && traceHMiddleD2.fraction == 1.0f) }, jumpable{ (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f) };
-    
-    if (walkable && crouchable && jumpable) //just walk
-        return 1;
-    else if (!walkable && jumpable)              //jump
+    const bool walkable{ (traceHBottom1.fraction == 1.0f && traceHBottom2.fraction == 1.0f && traceHBottomD1.fraction == 1.0f && traceHBottomD2.fraction == 1.0f) }, 
+               crouchable{ (traceHMiddle1.fraction == 1.0f && traceHMiddle2.fraction == 1.0f && traceHMiddleD1.fraction == 1.0f && traceHMiddleD2.fraction == 1.0f) }, 
+               jumpable{ (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f) }, 
+               forcejumpable{parentpos.z+18.f < pos.z };
+    if (forcejumpable&&jumpable)              //jump
         return 2;
-    else if (walkable && crouchable && !jumpable)//crouch
+    else if (walkable && crouchable&&jumpable) //just walk
+        return 1;
+    else if (walkable && crouchable&&!jumpable)    //crouch
         return 3;
     else return 0;
 }
@@ -832,7 +840,7 @@ void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
     if (botzConfig.nodes.size() > 0) {
-        for (int index = 0; index < botzConfig.nodes.size(); index++) {
+        for (uint32_t index = 0; index < botzConfig.nodes.size(); index++) {
             ImVec2 screenNodePos;
             Helpers::worldToScreenPixelAligned(botzConfig.nodes[index], screenNodePos);
             dlist->AddRectFilled({ screenNodePos.x - 13.f,screenNodePos.y - 13.f }, { screenNodePos.x + 13.f,screenNodePos.y + 20.f }, 0xCC333333);
@@ -854,7 +862,7 @@ void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
         return;
     else {
             std::vector<ImVec2>traceScreenPosStart,traceScreenPosEnd;
-            for (int index = 0; index < botzConfig.tracez.size(); index++) {
+            for (uint32_t index = 0; index < botzConfig.tracez.size(); index++) {
                 ImVec2 temp;
                 Helpers::worldToScreenPixelAligned(botzConfig.tracez[index].startpos, temp);
                 traceScreenPosStart.push_back(temp);
@@ -926,8 +934,9 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         if (botzConfig.currentNode != -1)
             botzConfig.fcost[botzConfig.currentNode] = 99999.f;
         if (std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen) != botzConfig.nodes.end())
-            continue;
-        int collides = collisionCheck(engineInterfaces, potentialOpen);
+            if(botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(),botzConfig.nodes.end(),potentialOpen))].z<potentialOpen.z+botzConfig.nodeRadius&& botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen))].z > potentialOpen.z - botzConfig.nodeRadius)
+                continue;
+        int collides = collisionCheck(engineInterfaces, potentialOpen,botzConfig.nodes[botzConfig.currentNode]);
         if (collides == 0||collides==4)
             continue;
         potentialOpen.z = botzConfig.tempFloorPos.z;
@@ -1024,7 +1033,7 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
     const csgo::Engine engine = engineInterfaces.getEngine();
-    for (int index = 0; index < botzConfig.nodes.size(); index++) {
+    for (uint32_t index = 0; index < botzConfig.nodes.size(); index++) {
         ImVec2 point1, point2, point3;
         Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius/4.f  ,botzConfig.nodes[index].y - botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                          , point1);
         Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius/4.f  ,botzConfig.nodes[index].y + botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                          , point2);
@@ -1039,14 +1048,15 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
         if (point4.x < 1 || point5.x < 1 || point6.x < 1)
             continue;
         dlist->AddTriangleFilled(point4, point5, point6, (botzConfig.nodesType[index] ? 0xFF44AA44 : 0xFFAA4444));
+        ImVec2 point7, point8;
     }
     std::vector<ImVec2> points;
     if (botzConfig.waypoints.size() > 0) {
-        for (int index = 0; index < botzConfig.waypoints.size(); index++) {
+        for (uint32_t index = 0; index < botzConfig.waypoints.size(); index++) {
             points.push_back({ 0.f,0.f });
             Helpers::worldToScreenPixelAligned(botzConfig.waypoints[index], points.back());
         }
-        for (int index = 0; index < points.size(); index++) {
+        for (uint32_t index = 0; index < points.size(); index++) {
             if (index != points.size() - 1)
                 dlist->AddLine(points[index], points[index + 1], 0xFF4444FF, 2.f);
         }
@@ -1266,7 +1276,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
     case 12:
         
         if (entity.getPOD() == localPlayer.get().getPOD())
-            break;
+            return;
         if (!entity.isOtherEnemy(memory, localPlayer.get()))
             return;
         botzConfig.aimspot = entity.getBonePosition(4);
@@ -1296,9 +1306,12 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         }
         break;
     case 13:
-        if (entity.getPOD() == localPlayer.get().getPOD()) {
+        if (!botzConfig.shouldGoTowardsPing)
+            return;
+        if (!entity.isOtherEnemy(memory,localPlayer.get())) {
             botzConfig.playerPingLoc = { event.getFloat("x"),event.getFloat("y"),event.getFloat("z") };
             botzConfig.finalDestination = botzConfig.playerPingLoc;
+            Misc::pathfind(engineInterfaces, memory);
         }
         break;
     default:break;
@@ -1378,7 +1391,7 @@ void Misc::updateInput() noexcept
 
 }
 
-static bool windowOpen = false;
+static bool windowOpen = true;
 
 void Misc::menuBarItem() noexcept
 {
@@ -1399,79 +1412,186 @@ void Misc::tabItem(Visuals& visuals, inventory_changer::InventoryChanger& invent
 
 void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, const EngineInterfaces& engineInterfaces, bool contentOnly) noexcept
 {
+    ImGui::SetNextWindowPos(ImGui::GetIO().DisplaySize - ImVec2(50, 25), ImGuiCond_Once);
+    ImGui::Begin("unhook", nullptr, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoBackground|ImGuiWindowFlags_NoMove);
+    if (ImGui::Button("unload"))
+        hooks->uninstall(*this, glow, engineInterfaces, clientInterfaces, interfaces, memory, visuals, inventoryChanger);
+    ImGui::End();
     if (!contentOnly) {
         if (!windowOpen)
             return;
-        ImGui::SetNextWindowSize({ 580.0f, 0.0f });
-        ImGui::Begin("Misc", &windowOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+        ImGui::SetNextWindowSize({ 580.0f, 390.0f });
+        ImGui::Begin("Misc", &windowOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar| ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     }
-    if (!miscConfig.menutodraw)
-    {
-        if (ImGui::Button("switch to misc"))
-            miscConfig.menutodraw = true;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.f, 4.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.f, 4.f));
+    ImGui::SetCursorPos(ImVec2(4.f, 4.f));
 
-        if (ImGui::Button("Toggle botzzz"))
-            botzConfig.isbotzon = !botzConfig.isbotzon;
+
+    ImGui::BeginChild("##tabs", ImVec2(572.f, 36.f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 3.f);
+    if (ImGui::Button("WALKBOT", ImVec2(140.f, 28.f)))
+        miscConfig.guiTab = 0;
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX()-6.f);
+    if (ImGui::Button("EVENTS", ImVec2(141.f, 28.f)))
+        miscConfig.guiTab = 1;
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX()-6.f);
+    if (ImGui::Button("CHAT", ImVec2(142.f, 28.f)))
+        miscConfig.guiTab = 2;
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX()-6.f);
+    if (ImGui::Button("MISC", ImVec2(140.f, 28.f)))
+        miscConfig.guiTab = 3;
+    ImGui::PopStyleVar();
+    ImGui::PopFont();
+    ImGui::EndChild();
+
+    
+    ImGui::SetCursorPosX(4.f);
+    ImGui::BeginChild("##main", ImVec2(572, 341),true,ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::PopStyleVar();
+
+    switch (miscConfig.guiTab) {
+    case 0:
+        ImGui::Checkbox("Toggle bot", &botzConfig.isbotzon);
         if (botzConfig.isbotzon) {
-            ImGui::Checkbox("Botz debug", &botzConfig.shouldDebug);
+            ImGui::Checkbox("Should go towards pos", &botzConfig.shouldwalk);
+            ImGui::Checkbox("Go towards teammates' pings", &botzConfig.shouldGoTowardsPing);
+            ImGui::Separator();
+
+            ImGui::PushItemWidth(200.f);
+            ImGui::SliderFloat("Max fall damage percent", &botzConfig.dropdownDmg, 0.0f, 0.99f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("Node spacing", &botzConfig.nodeRadius,2,150,"%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::PopItemWidth();
+            ImGui::Separator();
+
+            ImGui::Checkbox("Draw nodes", &botzConfig.circlesOrCost);
+            ImGui::Checkbox("Bot debug", &botzConfig.shouldDebug);
             if (botzConfig.shouldDebug) {
-                if (ImGui::Button("find path"))
-                    Misc::pathfind(engineInterfaces,memory);
-                if(botzConfig.nodes.size()>0)
-                    ImGui::SliderInt("node # ", &botzConfig.currentNode, 0, botzConfig.nodes.size() - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
-                if (ImGui::Button("open neighbor nodes of node"))
-                    openNode(engineInterfaces,botzConfig.currentNode);
-                ImGui::Separator();
-            }
-            //ImGui::SliderFloat("Waypoint approximation amount", &botzConfig.nodeRadius, 1.f, 150.f);
-            ImGui::Checkbox("Should walk towards pos", &botzConfig.shouldwalk);
-            ImGui::Separator();
-            ImGui::Text("Pathfinding");
-            ImGui::SliderFloat("Max fall damage (%)", &botzConfig.dropdownDmg, 0.0f, 1.0f,"%.2f",ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderInt("Node radius", &botzConfig.nodeRadius, 1, 150);
-            ImGui::Checkbox("Pathfinding debug", &botzConfig.pathfindingDebug);
-            ImGui::Checkbox("Draw pathfinding traces", &botzConfig.drawPathfindingTraces);
-            ImGui::Checkbox("Draw circles", &botzConfig.circlesOrCost);
-            ImGui::Separator();
-            ImGui::Text("Bot behavior");
-            ImGui::Checkbox("Autoreload", &botzConfig.autoreload);
-            if (botzConfig.autoreload) {
-                ImGui::SliderInt("Reload after X seconds of not seeing an enemy: ", &botzConfig.reloadAfterXSeconds, 0, 30);
-                ImGui::SliderFloat("Reload if clip is below x%", &botzConfig.reloadIfClipPercent, 0.01f, 0.99f, "%.2f");
-                ImGui::Checkbox("Quickswitch weapon after reload", &miscConfig.quickReload);
-            }
-            ImGui::Checkbox("Report info to team", &botzConfig.shouldReportToTeam);
-            if (botzConfig.shouldReportToTeam) {
-                ImGui::Checkbox("Report death position", &botzConfig.reportDetailsCallout);
-                ImGui::Checkbox("Report killer's name&weapon", &botzConfig.reportDetailsDiedTo);
+                ImGui::Text("|");
+                ImGui::SameLine();
+                ImGui::Checkbox("Draw debug information", &botzConfig.pathfindingDebug);
+                ImGui::Text("|");
+                ImGui::SameLine();
+                ImGui::Checkbox("Draw collision check traces", &botzConfig.drawPathfindingTraces);
+                ImGui::Text("|");
+                ImGui::SameLine();
+                if (ImGui::Button("Force reset local pos"))
+                    pathfind(engineInterfaces, memory);
+
             }
             ImGui::Separator();
-            ImGui::Text("Aiming");
-            ImGui::SliderFloat("Reaction time", &botzConfig.reactionTime, 0.f, 1.f,"%.2f");
-            ImGui::SliderFloat("aimtime", &botzConfig.aimtime[0], -2.2f, 0.28f, "%.2f");
-            ImGui::Separator();
-            ImGui::Text("Communication");
-            ImGui::SliderFloat("Compliment chance", &botzConfig.complimentChance, 1.f, 100.f,"%.0f",ImGuiSliderFlags_AlwaysClamp);
-            if (botzConfig.shouldwalk) {
-                ImGui::SliderFloat("X",&botzConfig.finalDestination.x, -5000.f, 5000.f);
-                ImGui::SliderFloat("Y",&botzConfig.finalDestination.y, -5000.f, 5000.f);
-                ImGui::SliderFloat("Z",&botzConfig.finalDestination.z, -5000.f, 5000.f);
-            }
         }
-    }
-    else
-    {
-        if (ImGui::Button("switch to botz"))
-            miscConfig.menutodraw = false;
-        ImGui::SameLine();
+        break;
+    case 1:
+        ImGui::Checkbox("Autoreload", &botzConfig.autoreload);
+        if (botzConfig.autoreload) {
+            ImGui::Text("|");
+            ImGui::SameLine();
+            ImGui::PushItemWidth(200.f);
+            ImGui::SliderInt("Reload after X seconds", &botzConfig.reloadAfterXSeconds, 0, 30);
+            ImGui::Text("|");
+            ImGui::SameLine();
+            ImGui::SliderFloat("Reload if clip is below x%", &botzConfig.reloadIfClipPercent, 0.01f, 0.99f, "%.2f");
+            ImGui::PopItemWidth();
+        }
+        ImGui::Separator();
+        ImGui::Checkbox("Report death info", &botzConfig.shouldReportToTeam);
+        if (botzConfig.shouldReportToTeam) {
+            ImGui::Text("|");
+            ImGui::SameLine();
+            ImGui::Checkbox("Report death position", &botzConfig.reportDetailsCallout);
+            ImGui::Text("|");
+            ImGui::SameLine();
+            ImGui::Checkbox("Report killer's name&weapon", &botzConfig.reportDetailsDiedTo);
+        }
+        ImGui::Separator();
+        ImGui::Checkbox("Compliment teammates on kill", &botzConfig.shouldCompliment);
+        if (botzConfig.shouldCompliment) {
+            ImGui::Text("|");
+            ImGui::SameLine();
+            ImGui::PushItemWidth(200.f);
+            ImGui::SliderFloat("Compliment chance", &botzConfig.complimentChance, 1.f, 100.f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::PopItemWidth();
+        }
+        ImGui::Separator();
+            break;
+    case 2:break;
+    case 3:
+        ImGui::Checkbox("Overhead chat", &miscConfig.overheadChat);
         ImGui::hotkey("Menu Key", miscConfig.menuKey);
-        ImGui::Checkbox("overhead chat", &miscConfig.overheadChat);
         ImGui::Checkbox("Bunny hop", &miscConfig.bunnyHop);
         ImGui::Checkbox("Auto accept", &miscConfig.autoAccept);
 
-        if (ImGui::Button("Unhook"))
-            hooks->uninstall(*this, glow, engineInterfaces, clientInterfaces, interfaces, memory, visuals, inventoryChanger);
+        break;
     }
+
+    ImGui::EndChild();
+
+    //    if (ImGui::Button("Toggle botzzz"))
+    //        botzConfig.isbotzon = !botzConfig.isbotzon;
+    //    if (botzConfig.isbotzon) {
+    //        ImGui::Checkbox("Botz debug", &botzConfig.shouldDebug);
+    //        if (botzConfig.shouldDebug) {
+    //            if (ImGui::Button("find path"))
+    //                Misc::pathfind(engineInterfaces,memory);
+    //            if(botzConfig.nodes.size()>0)
+    //                ImGui::SliderInt("node # ", &botzConfig.currentNode, 0, botzConfig.nodes.size() - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
+    //            if (ImGui::Button("open neighbor nodes of node"))
+    //                openNode(engineInterfaces,botzConfig.currentNode);
+    //            ImGui::Separator();
+    //        }
+    //        //ImGui::SliderFloat("Waypoint approximation amount", &botzConfig.nodeRadius, 1.f, 150.f);
+    //        ImGui::Checkbox("Should walk towards pos", &botzConfig.shouldwalk);
+    //        ImGui::Separator();
+    //        ImGui::Text("Pathfinding");
+    //        ImGui::SliderFloat("Max fall damage (%)", &botzConfig.dropdownDmg, 0.0f, 1.0f,"%.2f",ImGuiSliderFlags_AlwaysClamp);
+    //        ImGui::SliderInt("Node radius", &botzConfig.nodeRadius, 1, 150);
+    //        ImGui::Checkbox("Pathfinding debug", &botzConfig.pathfindingDebug);
+    //        ImGui::Checkbox("Draw pathfinding traces", &botzConfig.drawPathfindingTraces);
+    //        ImGui::Checkbox("Draw circles", &botzConfig.circlesOrCost);
+    //        ImGui::Separator();
+    //        ImGui::Text("Bot behavior");
+    //        ImGui::Checkbox("Autoreload", &botzConfig.autoreload);
+    //        if (botzConfig.autoreload) {
+    //            ImGui::SliderInt("Reload after X seconds of not seeing an enemy: ", &botzConfig.reloadAfterXSeconds, 0, 30);
+    //            ImGui::SliderFloat("Reload if clip is below x%", &botzConfig.reloadIfClipPercent, 0.01f, 0.99f, "%.2f");
+    //            ImGui::Checkbox("Quickswitch weapon after reload", &miscConfig.quickReload);
+    //        }
+    //        ImGui::Checkbox("Report info to team", &botzConfig.shouldReportToTeam);
+    //        if (botzConfig.shouldReportToTeam) {
+    //            ImGui::Checkbox("Report death position", &botzConfig.reportDetailsCallout);
+    //            ImGui::Checkbox("Report killer's name&weapon", &botzConfig.reportDetailsDiedTo);
+    //        }
+    //        ImGui::Separator();
+    //        ImGui::Text("Aiming");
+    //        ImGui::SliderFloat("Reaction time", &botzConfig.reactionTime, 0.f, 1.f,"%.2f");
+    //        ImGui::SliderFloat("aimtime", &botzConfig.aimtime[0], -2.2f, 0.28f, "%.2f");
+    //        ImGui::Separator();
+    //        ImGui::Text("Communication");
+    //        ImGui::SliderFloat("Compliment chance", &botzConfig.complimentChance, 1.f, 100.f,"%.0f",ImGuiSliderFlags_AlwaysClamp);
+    //        if (botzConfig.shouldwalk) {
+    //            ImGui::SliderFloat("X",&botzConfig.finalDestination.x, -5000.f, 5000.f);
+    //            ImGui::SliderFloat("Y",&botzConfig.finalDestination.y, -5000.f, 5000.f);
+    //            ImGui::SliderFloat("Z",&botzConfig.finalDestination.z, -5000.f, 5000.f);
+    //        }
+    //    }
+    //}
+    //else
+    //{
+    //    if (ImGui::Button("switch to botz"))
+    //        miscConfig.menutodraw = false;
+    //    ImGui::SameLine();
+    //    ImGui::hotkey("Menu Key", miscConfig.menuKey);
+    //    ImGui::Checkbox("overhead chat", &miscConfig.overheadChat);
+    //    ImGui::Checkbox("Bunny hop", &miscConfig.bunnyHop);
+    //    ImGui::Checkbox("Auto accept", &miscConfig.autoAccept);
+
+    //    if (ImGui::Button("Unhook"))
+    //        hooks->uninstall(*this, glow, engineInterfaces, clientInterfaces, interfaces, memory, visuals, inventoryChanger);
+    //}
     
     ImGui::Columns(1);
     if (!contentOnly)
