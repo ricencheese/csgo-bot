@@ -838,8 +838,8 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos,csg
     const bool walkable{ (traceHBottom1.fraction == 1.0f && traceHBottom2.fraction == 1.0f && traceHBottomD1.fraction == 1.0f && traceHBottomD2.fraction == 1.0f) }, 
                crouchable{ (traceHMiddle1.fraction == 1.0f && traceHMiddle2.fraction == 1.0f && traceHMiddleD1.fraction == 1.0f && traceHMiddleD2.fraction == 1.0f) }, 
                jumpable{ (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f) }, 
-               forcejumpable{parentpos.z+18.f < pos.z };
-    if (forcejumpable&&jumpable)              //jump
+               forcejumpable{parentpos.z+36.f < pos.z };
+    if (forcejumpable&&!walkable)              //jump
         return 2;
     else if (walkable && crouchable&&jumpable) //just walk
         return 1;
@@ -957,8 +957,8 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         if (botzConfig.currentNode != -1)
             botzConfig.fcost[botzConfig.currentNode] = 99999.f;
         if (std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen) != botzConfig.nodes.end())
-            if((botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(),botzConfig.nodes.end(),potentialOpen))].z<potentialOpen.z+botzConfig.nodeRadius)&&
-                (botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen))].z > potentialOpen.z - botzConfig.nodeRadius))
+            if(botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen))].z < potentialOpen.z + botzConfig.nodeRadius&&
+               botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen))].z > potentialOpen.z - botzConfig.nodeRadius)
                 continue;
         int collides = collisionCheck(engineInterfaces, potentialOpen,botzConfig.nodes[botzConfig.currentNode]);
         if (collides == 0||collides==4)
@@ -1551,9 +1551,11 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         ImGui::InputText("##input", &miscConfig.panoramaEvent);
         if (ImGui::Button("test"))
             Misc::autoqueue();
+        if (ImGui::Button("Start mm"))
+            memory.MatchmakingStart();
+
         if (ImGui::Button("I think I might be addicted to csgo"))
             Misc::antiaddiction();
-
         break;
     }
 

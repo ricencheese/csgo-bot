@@ -107,6 +107,7 @@ public:
     csgo::PanoramaMarshallHelperPOD* panoramaMarshallHelper;
     FunctionInvoker<csgo::FindOrCreateEconItemViewForItemID> findOrCreateEconItemViewForItemID;
     csgo::CreateBaseTypeCache createBaseTypeCache;
+    void (THISCALL_CONV* MatchmakingStart)();
 
     short makePanoramaSymbol(const char* name) const noexcept
     {
