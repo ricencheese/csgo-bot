@@ -57,6 +57,11 @@ public:
     void voteRevealer(const csgo::GameEvent& event) noexcept;
     void drawOffscreenEnemies(const csgo::Engine& engine, ImDrawList* drawList) noexcept;
     void autoAccept(const char* soundEntry) noexcept;
+    
+    //testing
+    void autoqueue() noexcept;
+    //misc
+    void antiaddiction() noexcept;
     //chatting
     void readChat(const void* data, int size) noexcept;
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;

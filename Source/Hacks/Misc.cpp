@@ -1,4 +1,4 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <array>
 #include <iomanip>
 #include <mutex>
@@ -86,7 +86,6 @@ struct MiscConfig {
     MiscConfig() { clanTag[0] = '\0'; }
 
     KeyBind menuKey{ KeyBind::INSERT };
-    bool menutodraw{ false };//false if bot menu, true if misc menu
     bool antiAfkKick{ false };
     bool autoStrafe{ false };
     bool bunnyHop{ false };
@@ -171,6 +170,7 @@ struct MiscConfig {
     float messageLoggedAt = 0.f;
     OffscreenEnemies offscreenEnemies;
     int guiTab = 0;
+    std::string panoramaEvent = "OpenSidebarPanel";
 } miscConfig;
 
 struct BotzConfig {
@@ -446,7 +446,8 @@ void Misc::onVoteStart(const void* data, int size) noexcept
     const auto isLocal = localPlayer && entity.getPOD() == localPlayer.get().getPOD();
 
     const auto voteType = reader.readInt32(3);
-    csgo::HudChat::from(retSpoofGadgets->client, memory.clientMode->hudChat).printf(0, " \x0C\u2022Osiris\u2022 %c%s\x01 call vote (\x06%s\x01)", isLocal ? '\x01' : '\x06', isLocal ? "You" : entity.getPlayerName(interfaces, memory).c_str(), voteName(voteType));
+    csgo::HudChat::from(retSpoofGadgets->client, memory.clientMode->hudChat).printf(0, " \x0C\u2022boted\u2022 %c%s\x01 call vote (\x06%s\x01)", isLocal ? '\x01' : '\x06', isLocal ? "You" : entity.getPlayerName(interfaces, memory).c_str(), voteName(voteType));
+    
 }
 
 void Misc::onVotePass() noexcept
@@ -590,6 +591,28 @@ void Misc::autoAccept(const char* soundEntry) noexcept
     FlashWindowEx(&flash);
     ShowWindow(window, SW_RESTORE);
 #endif
+}
+
+//testing
+void Misc::autoqueue() noexcept {
+
+    const auto panoramaEngine = interfaces.getPanoramaUIEngine();
+    memory.conColorMsg({ 255,255,0 }, "autoquequein");
+
+    if (const auto idx = memory.registeredPanoramaEvents->find(memory.makePanoramaSymbol(miscConfig.panoramaEvent.c_str())); idx != -1) {
+        if (const auto eventPtr = retSpoofGadgets->client.invokeCdecl<void*>(std::uintptr_t(memory.registeredPanoramaEvents->memory[idx].value.makeEvent), nullptr))
+            csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).dispatchEvent(eventPtr);
+    }
+}
+
+
+//misc
+
+void Misc::antiaddiction() noexcept {
+    if (const auto idx = memory.registeredPanoramaEvents->find(memory.makePanoramaSymbol("PanoramaComponent_MyPersona_GameMustExitNowForAntiAddiction")); idx != -1) {
+        if (const auto eventPtr = retSpoofGadgets->client.invokeCdecl<void*>(std::uintptr_t(memory.registeredPanoramaEvents->memory[idx].value.makeEvent), nullptr))
+            csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).dispatchEvent(eventPtr);
+    }
 }
 
 //chattin
@@ -934,7 +957,8 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         if (botzConfig.currentNode != -1)
             botzConfig.fcost[botzConfig.currentNode] = 99999.f;
         if (std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen) != botzConfig.nodes.end())
-            if(botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(),botzConfig.nodes.end(),potentialOpen))].z<potentialOpen.z+botzConfig.nodeRadius&& botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen))].z > potentialOpen.z - botzConfig.nodeRadius)
+            if((botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(),botzConfig.nodes.end(),potentialOpen))].z<potentialOpen.z+botzConfig.nodeRadius)&&
+                (botzConfig.nodes[std::distance(botzConfig.nodes.begin(), std::find(botzConfig.nodes.begin(), botzConfig.nodes.end(), potentialOpen))].z > potentialOpen.z - botzConfig.nodeRadius))
                 continue;
         int collides = collisionCheck(engineInterfaces, potentialOpen,botzConfig.nodes[botzConfig.currentNode]);
         if (collides == 0||collides==4)
@@ -1178,7 +1202,7 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
     relAngle = Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), worldpos, localPlayer.get().eyeAngles());
     //waypoint approximation will consider the point reached if the player is
     //within x units from the point i.e. the point is at x 1035 and approx is
-    //15, the player will stop moving at 1035�15 and consider the point reached
+    //15, the player will stop moving at 1035±15 and consider the point reached
     if (botzConfig.waypoints.size() > 0) {
         if ((localPlayer.get().getAbsOrigin().x - botzConfig.nodeRadius-1.f < botzConfig.waypoints.back().x && botzConfig.waypoints.back().x < localPlayer.get().getAbsOrigin().x + botzConfig.nodeRadius-1.f) &&
             (localPlayer.get().getAbsOrigin().y - botzConfig.nodeRadius-1.f < botzConfig.waypoints.back().y && botzConfig.waypoints.back().y < localPlayer.get().getAbsOrigin().y + botzConfig.nodeRadius-1.f) &&
@@ -1366,7 +1390,6 @@ void Misc::dispatchUserMessageHook(csgo::UserMessageType type, int size, const v
     case VoteStart: return onVoteStart(data, size);
     case VotePass: return onVotePass();
     case VoteFailed: return onVoteFailed();
-    //case Text:    return readChat(data,size);
     case SayText2: return readChat(data, size);
     default: break;
     }
@@ -1524,6 +1547,12 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         ImGui::hotkey("Menu Key", miscConfig.menuKey);
         ImGui::Checkbox("Bunny hop", &miscConfig.bunnyHop);
         ImGui::Checkbox("Auto accept", &miscConfig.autoAccept);
+
+        ImGui::InputText("##input", &miscConfig.panoramaEvent);
+        if (ImGui::Button("test"))
+            Misc::autoqueue();
+        if (ImGui::Button("I think I might be addicted to csgo"))
+            Misc::antiaddiction();
 
         break;
     }
