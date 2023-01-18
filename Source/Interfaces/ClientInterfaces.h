@@ -35,6 +35,7 @@ public:
         return csgo::Prediction::from(retSpoofInvoker, pods.prediction);
     }
 
+
 private:
     RetSpoofInvoker retSpoofInvoker;
     const ClientInterfacesPODs& pods;

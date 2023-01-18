@@ -8,6 +8,7 @@
 #include <Interfaces/OtherInterfaces.h>
 #include <RetSpoof/FunctionInvoker.h>
 #include <CSGO/Functions.h>
+#include "../CSGO/Panorama.h"
 
 namespace csgo { enum class FrameStage; }
 namespace csgo { enum class UserMessageType; }
@@ -58,6 +59,8 @@ public:
     void drawOffscreenEnemies(const csgo::Engine& engine, ImDrawList* drawList) noexcept;
     void autoAccept(const char* soundEntry) noexcept;
     
+    panorama::IUIPanel* GetRoot(bool inGame) noexcept;
+
     //testing
     void autoqueue() noexcept;
     //misc
@@ -66,16 +69,24 @@ public:
     void readChat(const void* data, int size) noexcept;
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     void chatBot(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
-    //botzzzzzzzzzzz shit
-    void aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept;
-    void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
-    void drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept;
-    void findPath(const EngineInterfaces& engineInterfaces) noexcept;
-    void pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
-    void drawPath(const EngineInterfaces& engineInterfaces) noexcept;
-    void reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event,bool forceReport = false) noexcept;
-    void reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
-    void gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
+    //botzzzzzzzzzzz shiz
+        //proper pathfinding
+        void aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept;
+        void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
+        void drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept;
+        void findPath(const EngineInterfaces& engineInterfaces) noexcept;
+        void pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
+        void drawPath(const EngineInterfaces& engineInterfaces) noexcept;
+        void reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event,bool forceReport = false) noexcept;
+        void reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
+        void gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
+
+        //node mesh shizzzzzzzz
+        void addNewNode(const EngineInterfaces& engineInterfaces, csgo::Vector pingPos) noexcept;
+        void drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept;
+        void getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept;
+
+
     void handleRadioCommands(const csgo::GameEvent& event, const EngineInterfaces& engineInterfaces) noexcept;
     void handleBotzEvents(const Memory& memory,const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, const ClientInterfaces& clientInterfaces,int eventType) noexcept;
 

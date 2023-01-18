@@ -5,6 +5,10 @@
 
 #include "VirtualMethod.h"
 
+#include "IUIPanel.h"
+#include "IUIEvent.h"
+#include "types.h"
+
 namespace csgo
 {
 
@@ -32,7 +36,12 @@ struct UIEnginePOD;
 
 class UIEngine : public VirtualCallableFromPOD<UIEngine, UIEnginePOD> {
 public:
-    VIRTUAL_METHOD_V(void, dispatchEvent, 52, (void* eventPtr), (eventPtr))
+    VIRTUAL_METHOD_V(bool, IsValidPanelPointer, 36, (panorama::IUIPanel const* var1), (var1));
+    VIRTUAL_METHOD_V(void, dispatchEvent, 52, (void* eventPtr), (eventPtr));
+    VIRTUAL_METHOD_V(panorama::IUIPanel*, GetLastDispatchedEventTargetPanel, 56, (),());
+    VIRTUAL_METHOD_V(int, RunScript, 114, (panorama::IUIPanel* panel, char const* entireJSCode, char const* pathToXMLContext, int var1, int var2, bool alreadyCompiled), (panel, entireJSCode, pathToXMLContext, var1, var2, alreadyCompiled));
+    
+    // virtual IUIPanel* GetLastDispatchedEventTargetPanel(void) = 0; // This function can fail sometimes and you need to check the result/call it later (YUCK!)
 };
 
 struct PanoramaUIEnginePOD;

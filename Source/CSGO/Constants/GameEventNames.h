@@ -18,6 +18,7 @@ namespace csgo
 	GAMEEVENT_NAME(bullet_impact);		//event 11
 	GAMEEVENT_NAME(weapon_fire);		//event 12
 	GAMEEVENT_NAME(player_ping);		//event 13
+	GAMEEVENT_NAME(player_connect);		//event 14
 	
 
 

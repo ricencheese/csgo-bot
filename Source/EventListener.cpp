@@ -32,6 +32,7 @@ EventListener::EventListener(csgo::GameEventManager gameEventManager)
     gameEventManager.addListener(this, csgo::player_radio);         //event 6
     gameEventManager.addListener(this, csgo::weapon_fire);          //event 12
     gameEventManager.addListener(this, csgo::player_ping);          //event 13
+    gameEventManager.addListener(this, csgo::player_connect);       //event 14
 
     // Move our player_death listener to the first position to override killfeed icons (InventoryChanger::overrideHudIcon()) before HUD gets them
     if (const auto desc = gameEventManager.getEventDescriptor(csgo::player_death, nullptr))

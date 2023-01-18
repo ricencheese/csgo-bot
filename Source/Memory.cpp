@@ -92,8 +92,8 @@ Memory::Memory(const helpers::PatternFinder& clientPatternFinder, const helpers:
     registeredPanoramaEvents = clientPatternFinder("\xE8????\xA1????\xA8\x01\x75\x21").add(6).deref().add(-36).as<decltype(registeredPanoramaEvents)>();
     makePanoramaSymbolFn = clientPatternFinder("\xE8????\x0F\xB7\x45\x0E\x8D\x4D\x0E").add(1).relativeToAbsolute().as<decltype(makePanoramaSymbolFn)>();
     panoramaMarshallHelper = clientPatternFinder("\x68????\x8B\xC8\xE8????\x8D\x4D\xF4\xFF\x15????\x8B\xCF\xFF\x15????\x5F\x5E\x8B\xE5\x5D\xC3").add(1).deref().as<decltype(panoramaMarshallHelper)>();
-
-    MatchmakingStart = clientPatternFinder("\x6A\x00\x68????\x50\x8D\x45\xEC\x50\xFF\x15????\x83\xC4\x14\x8B\x00\x89\x06\x8B\x4D\xF4\xFF\x15????\x8B\x0D????\x6A\x03\x68????\x6A\x01\x8B\x01\x68????\xFF\x90????\x8B\x0D????\x8D\x75\xFC\x68????\x56\xC7\x45?????").as<decltype (MatchmakingStart)>();
+    //idk doesn't work
+    //MatchmakingStart = clientPatternFinder("\x8B\x0D????\x68????\x8B\x01\x8B\x80????\xFF\xD0\x84\xC0\x74\x50").add(166).relativeToAbsolute().add(1).as<decltype (MatchmakingStart)>();
 
     createBaseTypeCache = clientPatternFinder("\xE8????\x8D\x4D\x0F").add(1).relativeToAbsolute().as<csgo::CreateBaseTypeCache>();
 

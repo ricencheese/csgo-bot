@@ -56,6 +56,9 @@
 #include "../GameData.h"
 #include "../GlobalContext.h"
 
+#include "CSGO/IUIPanel.h"
+#include "CSGO/IUIEvent.h"
+
 #include "../imguiCustom.h"
 #include <Interfaces/ClientInterfaces.h>
 
@@ -171,6 +174,7 @@ struct MiscConfig {
     OffscreenEnemies offscreenEnemies;
     int guiTab = 0;
     std::string panoramaEvent = "OpenSidebarPanel";
+    float matchmakingStartTime{ 0 };
 } miscConfig;
 
 struct BotzConfig {
@@ -179,27 +183,39 @@ struct BotzConfig {
 
     int botState = 0;
 
-    bool shouldwalk{ false };               //walkbot vars
-    
+            
+        //walkbot vars
+    bool shouldwalk{ false };
+
+    //common walkbot vars
+    int walkbotType{ 0 };
+    int nodeRadius{ 33 };
+    std::vector<int> waypointWalkType;
+    float dropdownDmg{ 0.f };
+
+
+        //walkbot type 0 (auto pathfinding)
     std::vector<csgo::Vector> nodes;//node positions
     std::vector<bool> nodesType;    //true if a node is open,false if closed
     std::vector<int>nodesParents;   //index of the parent node
     std::vector<int>walkType;       //same as return of collisionCheck()
     std::vector<float> fcost;       //total cost of node (dist to localplayer+dist to destination)
-    int nodeRadius{ 33 };
     int currentNode{ 0 };
     bool pathFound{ false };
-    float dropdownDmg{ 0.f };
     std::vector<csgo::Trace>tracez;
     csgo::Trace middleTrace;
     csgo::Vector checkOrigin{ 0,0,0 };
     csgo::Vector tempFloorPos{ 0,0,0 };
     csgo::Vector finalDestination{ 0.f,0.f,0.f};
-    //float nodeRadius-1.f{ 32.f };    //todo: replace with nodeRadius-1.f
     std::vector<csgo::Vector> waypoints;
-    std::vector<int> waypointWalkType;
     int curWayPoint{ -2 };
     bool shouldGoTowardsPing{ false };
+
+        //walkbot type 1 (node pathfinding)
+    std::vector<csgo::Vector> presetNodes;
+    const std::array<std::string,3> maplist{ "borbot","de_mirage",""};//supported maps
+    std::string currentMap{ "idk" };
+    std::vector<int> nodeGroup;
 
     csgo::Vector playerPingLoc{ 0,0,0 };
 
@@ -252,7 +268,46 @@ void pop_front(std::vector<T>& vec)
     vec.erase(vec.begin());
 }
 
-
+panorama::IUIPanel* Misc::GetRoot(bool inGame) noexcept
+{
+    auto panoramaEngine = interfaces.getPanoramaUIEngine();
+    
+    
+    //return nullptr;
+    //auto test = eng->IsValidPanelPointer((panorama::IUIPanel*)0x1337);
+    //return NULL;
+    //auto tes = eng->GetApplicationInstallPath();
+    //return 0;
+    auto panel = csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).GetLastDispatchedEventTargetPanel();
+    //return nullptr;
+    if (!csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).IsValidPanelPointer(panel))
+    {
+        return NULL;
+    }
+    panorama::IUIPanel* itr = panel;
+    panorama::IUIPanel* ret = nullptr;
+    while (itr && csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).IsValidPanelPointer(itr))
+    {
+        if (inGame)
+        {
+            if (!strcmp(itr->GetID(), "CSGOHud"))
+            {
+                ret = itr;
+                break;
+            }
+        }
+        else
+        {
+            if (!strcmp(itr->GetID(), "CSGOMainMenu"))
+            {
+                ret = itr;
+                break;
+            }
+        }
+        itr = itr->GetParent();
+    }
+    return ret;
+}
 
 bool Misc::isRadarHackOn() noexcept
 {
@@ -597,11 +652,15 @@ void Misc::autoAccept(const char* soundEntry) noexcept
 void Misc::autoqueue() noexcept {
 
     const auto panoramaEngine = interfaces.getPanoramaUIEngine();
-    memory.conColorMsg({ 255,255,0 }, "autoquequein");
+    memory.conColorMsg({ 0,255,255,255 }, miscConfig.panoramaEvent.c_str());
+    memory.conColorMsg({ 255,255,0,255 }, "\ntestin\n");
 
     if (const auto idx = memory.registeredPanoramaEvents->find(memory.makePanoramaSymbol(miscConfig.panoramaEvent.c_str())); idx != -1) {
-        if (const auto eventPtr = retSpoofGadgets->client.invokeCdecl<void*>(std::uintptr_t(memory.registeredPanoramaEvents->memory[idx].value.makeEvent), nullptr))
-            csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).dispatchEvent(eventPtr);
+        memory.conColorMsg({ 255,255,0,255 }, "idx is ok\n");
+        if (const auto eventPtr = retSpoofGadgets->client.invokeCdecl<void*>(std::uintptr_t(memory.registeredPanoramaEvents->memory[idx].value.makeEvent), nullptr)) {
+            memory.conColorMsg({ 255,255,0,255 }, "eventPtr is ok\n");
+            csgo::UIEngine::from(retSpoofGadgets->client, panoramaEngine.accessUIEngine()).dispatchEvent(eventPtr);
+        }
     }
 }
 
@@ -612,6 +671,7 @@ void Misc::antiaddiction() noexcept {
     if (const auto idx = memory.registeredPanoramaEvents->find(memory.makePanoramaSymbol("PanoramaComponent_MyPersona_GameMustExitNowForAntiAddiction")); idx != -1) {
         if (const auto eventPtr = retSpoofGadgets->client.invokeCdecl<void*>(std::uintptr_t(memory.registeredPanoramaEvents->memory[idx].value.makeEvent), nullptr))
             csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).dispatchEvent(eventPtr);
+        
     }
 }
 
@@ -675,6 +735,61 @@ void Misc::chatBot(const EngineInterfaces& engineInterfaces, const Memory& memor
         return;
 
 }
+void Misc::reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, bool forceReport) noexcept {
+
+    if (!botzConfig.isbotzon || !botzConfig.shouldReportToTeam)
+        return;
+    if (!localPlayer)
+        return;
+    if (!localPlayer.get().isAlive())
+        return;
+
+    const csgo::Engine& engine = engineInterfaces.getEngine();
+
+    const char* localCallout = localPlayer.get().lastPlaceName();
+    std::string say_team;
+    if (botzConfig.botState == 2) {
+        std::string say_team = "say_team \"i see an enemy at ";
+        say_team += localCallout;
+        say_team += "\"";
+    }
+    else if (botzConfig.botState == 6) {
+        csgo::PlayerInfo pinfo;
+        engine.getPlayerInfo(engine.getPlayerForUserID(event.getInt("attacker")), pinfo);
+        say_team = "say_team \"I died ";
+        if (botzConfig.reportDetailsCallout) {
+            say_team += " at ";
+            say_team += localCallout;
+        }
+        if (botzConfig.reportDetailsDiedTo) {
+            say_team += " to ";
+            say_team += (pinfo.fakeplayer ? "BOT " : "");
+            say_team += (event.getInt("attacker") == localPlayer.get().getUserId(engine) ? " my own " : pinfo.name);
+            if (event.getInt("attacker") != localPlayer.get().getUserId(engine))
+                say_team += "\'s ";
+            say_team += event.getString("weapon");
+        }
+        say_team += "\"";
+    }
+    switch (botzConfig.botState) {
+    case 0:break;   //idling
+    case 1:break;   //in combat
+    case 2:         //see enemy
+        engine.clientCmdUnrestricted(say_team.c_str());
+        engine.clientCmdUnrestricted("needbackup");
+        botzConfig.botState = 1;
+        break;
+    case 3:break;   //reloading
+    case 4:break;   //following teammate
+    case 5:break;   //throwing a grenade
+    case 6:         //bot just died
+        engine.clientCmdUnrestricted(say_team.c_str());
+        botzConfig.botState = 0;
+        break;
+    case 7:break;   //defending bombsite
+    case 8:break;   //searching for c4
+    }
+}
 //botz stuff
 
 void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept {
@@ -709,30 +824,8 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     }
 }
 
-//void Misc::findDoors(const EngineInterfaces& engineInterfaces, csgo::UserCmd* cmd) noexcept {
-//
-//    if (!localPlayer)
-//        return;
-//    if (!localPlayer.get().isAlive())
-//        return;
-//    if (!botzConfig.isbotzon)
-//        return;
-//    if (!engineInterfaces.getEngine().isInGame())
-//        return;
-//
-//    csgo::Trace traceXp; //front,back,right,left
-//
-//    csgo::Vector viewangleshit{ localPlayer.get().getEyePosition().x + cos(Helpers::deg2rad(localPlayer.get().eyeAngles().y)) * 60,
-//                                localPlayer.get().getEyePosition().y + sin(Helpers::deg2rad(localPlayer.get().eyeAngles().y)) * 60,
-//                                localPlayer.get().getEyePosition().z };
-//    const csgo::Vector lPlayerEyes = localPlayer.get().getEyePosition();
-//    engineInterfaces.engineTrace().traceRay({ lPlayerEyes, viewangleshit }, 0x4000, localPlayer.get().getPOD(), traceXp);
-//    botzConfig.hitglass = traceXp.fraction;
-//
-//    if (traceXp.fraction < 1.0f)
-//        cmd->buttons |= csgo::UserCmd::IN_USE;
-//}
 
+//proper pathfinding
 void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept {
     if (!localPlayer)
         return;
@@ -839,7 +932,7 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos,csg
                crouchable{ (traceHMiddle1.fraction == 1.0f && traceHMiddle2.fraction == 1.0f && traceHMiddleD1.fraction == 1.0f && traceHMiddleD2.fraction == 1.0f) }, 
                jumpable{ (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f) }, 
                forcejumpable{parentpos.z+36.f < pos.z };
-    if (forcejumpable&&!walkable)              //jump
+    if (forcejumpable)              //jump
         return 2;
     else if (walkable && crouchable&&jumpable) //just walk
         return 1;
@@ -968,7 +1061,8 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         botzConfig.nodesType.push_back(false);
         botzConfig.nodesParents.push_back(botzConfig.currentNode);
         botzConfig.walkType.push_back(collides);
-        botzConfig.fcost.push_back(botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()) + botzConfig.nodes.back().distTo(botzConfig.finalDestination));
+                                    //uncomment  whenever a better "node-already-exists" detection is added, improves pathfinding 10000x
+        botzConfig.fcost.push_back(/*botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()) + */botzConfig.nodes.back().distTo(botzConfig.finalDestination));
         
         if (botzConfig.nodes.back().distTo(botzConfig.finalDestination) < botzConfig.nodeRadius-1.f)
         {
@@ -1015,7 +1109,6 @@ void Misc::findPath(const EngineInterfaces& engineInterfaces) noexcept {
     }
 }
 
-
 void Misc::pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
     if (!botzConfig.isbotzon)
         return;
@@ -1055,24 +1148,53 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
     if (!botzConfig.circlesOrCost)
         return;
     ImDrawList* dlist;
+    ImDrawList* dlistfg;
     dlist = ImGui::GetBackgroundDrawList();
+    dlistfg = ImGui::GetForegroundDrawList();
     const csgo::Engine engine = engineInterfaces.getEngine();
     for (uint32_t index = 0; index < botzConfig.nodes.size(); index++) {
-        ImVec2 point1, point2, point3;
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius/4.f  ,botzConfig.nodes[index].y - botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                          , point1);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius/4.f  ,botzConfig.nodes[index].y + botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                          , point2);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x                              ,botzConfig.nodes[index].y                                ,botzConfig.nodes[index].z+botzConfig.nodeRadius/8.f }, point3);
-        if (point1.x < 1 || point2.x < 1 || point3.x < 1)
+        ImVec2 screenPosTL, screenPosTR, screenPosBL, screenPosBR, screenPosMID;
+        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x,       botzConfig.nodes[index].y,       botzConfig.nodes[index].z + 13.f }, screenPosMID);
+        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius/2.f,botzConfig.nodes[index].y + botzConfig.nodeRadius/2.f,botzConfig.nodes[index].z }, screenPosTL);
+        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius/2.f,botzConfig.nodes[index].y + botzConfig.nodeRadius/2.f,botzConfig.nodes[index].z }, screenPosTR);
+        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius/2.f,botzConfig.nodes[index].y - botzConfig.nodeRadius/2.f,botzConfig.nodes[index].z }, screenPosBL);
+        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius/2.f,botzConfig.nodes[index].y - botzConfig.nodeRadius/2.f,botzConfig.nodes[index].z }, screenPosBR);
+
+        if (screenPosMID.x < 1 || screenPosTL.x < 1 || screenPosTR.x < 1 || screenPosBL.x < 1 || screenPosBL.x < 1|| screenPosMID.y < 1 || screenPosTL.y < 1 || screenPosTR.y < 1 || screenPosBL.y < 1 || screenPosBL.y < 1)
             continue;
-        dlist->AddTriangleFilled(point1, point2, point3, (botzConfig.nodesType[index] ? 0xFF44AA44 : 0xFFAA4444));
-        ImVec2 point4,point5,point6;
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].y - botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                              , point4);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].y + botzConfig.nodeRadius / 4.f  ,botzConfig.nodes[index].z }                              , point5);
-        Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x                                ,botzConfig.nodes[index].y                                ,botzConfig.nodes[index].z + botzConfig.nodeRadius / 8.f }, point6);
-        if (point4.x < 1 || point5.x < 1 || point6.x < 1)
-            continue;
-        dlist->AddTriangleFilled(point4, point5, point6, (botzConfig.nodesType[index] ? 0xFF44AA44 : 0xFFAA4444));
-        ImVec2 point7, point8;
+        if (botzConfig.nodesType[index]) {
+            dlistfg->AddTriangleFilled(screenPosTL, screenPosTR, screenPosMID, 0x9944AA44);
+            dlistfg->AddTriangleFilled(screenPosTL, screenPosBL, screenPosMID, 0x9944AA44);
+            dlistfg->AddTriangleFilled(screenPosBL, screenPosBR, screenPosMID, 0x9944AA44);
+            dlistfg->AddTriangleFilled(screenPosBR, screenPosTR, screenPosMID, 0x9944AA44);
+            if (botzConfig.nodes[index].distTo(localPlayer.get().getEyePosition()) < 400.f) {
+                dlistfg->AddLine(screenPosTR, screenPosBR, 0x99000000, 1.f);
+                dlistfg->AddLine(screenPosTL, screenPosBL, 0x99000000, 1.f);
+                dlistfg->AddLine(screenPosBL, screenPosMID, 0x99000000, 1.f);
+                dlistfg->AddLine(screenPosBR, screenPosMID, 0x99000000, 1.f);
+                dlistfg->AddLine(screenPosBR, screenPosBL, 0x99000000, 1.f);
+                dlistfg->AddLine(screenPosTL, screenPosMID, 0x99000000, 1.f);
+                dlistfg->AddLine(screenPosTR, screenPosMID, 0x99000000, 1.f);
+                dlistfg->AddLine(screenPosTR, screenPosTL, 0x99000000, 1.f);
+            }
+        }
+        else if (!botzConfig.nodesType[index]) {
+            dlist->AddTriangleFilled(screenPosTL, screenPosTR, screenPosMID,0x99AA4444);
+            dlist->AddTriangleFilled(screenPosTL, screenPosBL, screenPosMID,0x99AA4444);
+            dlist->AddTriangleFilled(screenPosBL, screenPosBR, screenPosMID,0x99AA4444);
+            dlist->AddTriangleFilled(screenPosBR, screenPosTR, screenPosMID,0x99AA4444);
+            if (botzConfig.nodes[index].distTo(localPlayer.get().getEyePosition()) < 400.f) {
+            dlist->AddLine(screenPosTR, screenPosBR,    0x99000000, 1.f);
+            dlist->AddLine(screenPosTL, screenPosBL,    0x99000000, 1.f);
+            dlist->AddLine(screenPosBL, screenPosMID,   0x99000000, 1.f);
+            dlist->AddLine(screenPosBR, screenPosMID,   0x99000000, 1.f);
+            dlist->AddLine(screenPosBR, screenPosBL,    0x99000000, 1.f);
+            dlist->AddLine(screenPosTL, screenPosMID,   0x99000000, 1.f);
+            dlist->AddLine(screenPosTR, screenPosMID,   0x99000000, 1.f);
+            dlist->AddLine(screenPosTR, screenPosTL,    0x99000000, 1.f);
+            }
+        }
+
     }
     std::vector<ImVec2> points;
     if (botzConfig.waypoints.size() > 0) {
@@ -1082,7 +1204,7 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
         }
         for (uint32_t index = 0; index < points.size(); index++) {
             if (index != points.size() - 1)
-                dlist->AddLine(points[index], points[index + 1], 0xFF4444FF, 2.f);
+                dlistfg->AddLine(points[index], points[index + 1], 0xFF8888FF, 3.f);
         }
 
     }
@@ -1091,61 +1213,6 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
     dlist->AddCircleFilled(screenPosFinal, 15.f, 0xFFAA4444, 8);
 }
 
-void Misc::reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, bool forceReport) noexcept {
-
-    if (!botzConfig.isbotzon||!botzConfig.shouldReportToTeam)
-        return;
-    if (!localPlayer)
-        return;
-    if (!localPlayer.get().isAlive())
-        return;
-
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-
-    const char* localCallout = localPlayer.get().lastPlaceName();
-    std::string say_team;
-    if (botzConfig.botState == 2) {
-        std::string say_team = "say_team \"i see an enemy at ";
-        say_team += localCallout;
-        say_team += "\"";
-    }
-    else if (botzConfig.botState == 6) {
-        csgo::PlayerInfo pinfo;
-        engine.getPlayerInfo(engine.getPlayerForUserID(event.getInt("attacker")), pinfo);
-        say_team = "say_team \"I died ";
-        if (botzConfig.reportDetailsCallout) {
-            say_team += " at ";
-            say_team += localCallout;
-        }
-        if (botzConfig.reportDetailsDiedTo) {
-            say_team += " to ";
-            say_team += (pinfo.fakeplayer ? "BOT " : "");
-            say_team += (event.getInt("attacker")==localPlayer.get().getUserId(engine) ? " my own " : pinfo.name);
-            if (event.getInt("attacker") != localPlayer.get().getUserId(engine))
-                say_team += "\'s";
-            say_team += event.getString("weapon");
-        }
-        say_team += "\"";
-    }
-    switch (botzConfig.botState) {
-        case 0:break;   //idling
-        case 1:break;   //in combat
-        case 2:         //see enemy
-            engine.clientCmdUnrestricted(say_team.c_str());
-            engine.clientCmdUnrestricted("needbackup");
-            botzConfig.botState = 1;
-            break;   
-        case 3:break;   //reloading
-        case 4:break;   //following teammate
-        case 5:break;   //throwing a grenade
-        case 6:         //bot just died
-            engine.clientCmdUnrestricted(say_team.c_str());
-            botzConfig.botState = 0;
-            break;   
-        case 7:break;   //defending bombsite
-        case 8:break;   //searching for c4
-    }
-}
 
 void Misc::reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept {
     if (!localPlayer)
@@ -1227,6 +1294,105 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
 
 }
 
+//node mesh schizo bs
+
+void Misc::addNewNode(const EngineInterfaces& engineInterfaces,csgo::Vector pingPos) noexcept {
+    if (botzConfig.walkbotType != 1)
+        return;
+    if (!localPlayer)
+        return;
+    if (!localPlayer.get().isAlive())
+        return;
+    const csgo::Engine& engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+    const auto activeWeapon = csgo::Entity::from(retSpoofGadgets->client, localPlayer.get().getActiveWeapon());
+    int nodeType{ 0 };
+    switch (activeWeapon.getWeaponData()->price) {
+    case 50:
+        engine.clientCmdUnrestricted("say holding a decoy rn"); 
+        nodeType = 0;   //common
+        break;
+    case 200:
+        engine.clientCmdUnrestricted("say holding a flash grenade rn"); 
+        nodeType = 1;   //bombsite A
+        break;
+    case 300:
+        engine.clientCmdUnrestricted("say holding a smoke/he grenade rn");
+        nodeType = 2;   //bombsite B
+        break;
+    case 400:
+    case 600:
+        engine.clientCmdUnrestricted("say holding a firebomb rn");
+        nodeType = 3;   //camping spot
+        break;
+    default:engine.clientCmdUnrestricted(std::to_string(activeWeapon.getWeaponData()->price).c_str());
+    }
+    botzConfig.presetNodes.push_back(pingPos);
+    botzConfig.nodeGroup.push_back(nodeType);
+}
+
+void Misc::drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept {
+    if (!botzConfig.circlesOrCost)
+        return;
+    if (botzConfig.walkbotType != 1)
+        return;
+    if (!localPlayer)
+        return;
+    const csgo::Engine& engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+    ImDrawList* dlist;
+    dlist = ImGui::GetBackgroundDrawList();
+    for (int index = 0; index < botzConfig.presetNodes.size(); index++) {
+        ImVec2 screenPosTL,screenPosTR,screenPosBL,screenPosBR,screenPosMID;
+        ImU32 color;
+        std::string nodetype;
+        switch (botzConfig.nodeGroup[index]) {
+        case 0:nodetype = "Common"; color = 0x99BBBBBB; break;
+        case 1:nodetype = "Bombsite A"; color = 0x99FFA500; break;
+        case 2:nodetype = "Bombiste B"; color = 0x99EBD934; break;
+        case 3:nodetype = "Camping\n spot"; color = 0x99A534EB; break;
+        }
+        Helpers::worldToScreenPixelAligned({ botzConfig.presetNodes[index].x,botzConfig.presetNodes[index].y,botzConfig.presetNodes[index].z+13.f}, screenPosMID);
+        Helpers::worldToScreenPixelAligned({ botzConfig.presetNodes[index].x - 16.f,botzConfig.presetNodes[index].y+16.f,botzConfig.presetNodes[index].z }, screenPosTL);
+        Helpers::worldToScreenPixelAligned({ botzConfig.presetNodes[index].x + 16.f,botzConfig.presetNodes[index].y+16.f,botzConfig.presetNodes[index].z }, screenPosTR);
+        Helpers::worldToScreenPixelAligned({ botzConfig.presetNodes[index].x - 16.f,botzConfig.presetNodes[index].y-16.f,botzConfig.presetNodes[index].z }, screenPosBL);
+        Helpers::worldToScreenPixelAligned({ botzConfig.presetNodes[index].x + 16.f,botzConfig.presetNodes[index].y-16.f,botzConfig.presetNodes[index].z }, screenPosBR);
+        if (screenPosMID.x < 1 || screenPosTL.x < 1 || screenPosTR.x < 1 || screenPosBL.x < 1 || screenPosBL.x < 1)
+            continue;
+
+        dlist->AddTriangleFilled(screenPosTL,screenPosTR,screenPosMID,color);
+        dlist->AddTriangleFilled(screenPosTL,screenPosBL,screenPosMID,color);
+        dlist->AddTriangleFilled(screenPosBL,screenPosBR,screenPosMID,color);
+        dlist->AddTriangleFilled(screenPosBR,screenPosTR,screenPosMID,color);
+        dlist->AddLine(screenPosTR, screenPosBR, 0xCC000000, 2.f);
+        dlist->AddLine(screenPosTL, screenPosBL, 0xCC000000, 2.f);
+        dlist->AddLine(screenPosBL, screenPosMID, 0xCC000000, 2.f);
+        dlist->AddLine(screenPosBR, screenPosMID, 0xCC000000, 2.f);
+        dlist->AddLine(screenPosBR, screenPosBL, 0xCC000000, 2.f);
+        dlist->AddLine(screenPosTL, screenPosMID, 0xCC000000, 2.f);
+        dlist->AddLine(screenPosTR, screenPosMID, 0xCC000000, 2.f);
+        dlist->AddLine(screenPosTR, screenPosTL, 0xCC000000, 2.f);
+
+        if (screenPosMID.x > ImGui::GetIO().DisplaySize.x / 2.f - 40.f && screenPosMID.x<ImGui::GetIO().DisplaySize.x / 2.f + 40.f && screenPosMID.y>ImGui::GetIO().DisplaySize.y / 2.f - 40.f && screenPosMID.y < ImGui::GetIO().DisplaySize.y / 2.f + 40.f) {
+            dlist->AddText(ImVec2(screenPosMID.x + 1.f, screenPosMID.y + 1.f), 0xFF000000, nodetype.c_str());
+            dlist->AddText(screenPosMID, 0xFFFFFFFF, nodetype.c_str());
+            if (GetKeyState(VK_DELETE) & 0x8000){
+            botzConfig.presetNodes.erase(botzConfig.presetNodes.begin() + index);
+            botzConfig.nodeGroup.erase(botzConfig.nodeGroup.begin() + index);
+            }
+        }
+    }
+
+}
+
+void Misc::getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept {
+    const csgo::Engine& engine=engineInterfaces.getEngine();
+    botzConfig.currentMap = engine.getLevelName();
+}
+
+
 void Misc::handleRadioCommands(const csgo::GameEvent& event, const EngineInterfaces& engineInterfaces) noexcept {
     if (!localPlayer)                   
         return;                         
@@ -1261,7 +1427,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
     if (!botzConfig.isbotzon)                                                                                            //3: bomb_planted      4: bomb_defused     5: bomb_exploded
         return;                                                                                                          //6: player_radio      7: round_freeze_end 8: vote_cast
     const csgo::Engine& engine = engineInterfaces.getEngine();                                                           //9: round_mvp         10:item_purchase    11:bullet_impact
-    std::string eventName = event.getName();                                                                             //12:weapon_fire      13:player_ping
+    std::string eventName = event.getName();                                                                             //12:weapon_fire       13:player_ping      14:player_connect
     eventName += "!";
     engine.clientCmdUnrestricted(eventName.c_str());                                                                       
     const auto localUserId = localPlayer.get().getUserId(engine);
@@ -1330,12 +1496,24 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         }
         break;
     case 13:
-        if (!botzConfig.shouldGoTowardsPing)
-            return;
-        if (!entity.isOtherEnemy(memory,localPlayer.get())) {
-            botzConfig.playerPingLoc = { event.getFloat("x"),event.getFloat("y"),event.getFloat("z") };
-            botzConfig.finalDestination = botzConfig.playerPingLoc;
-            Misc::pathfind(engineInterfaces, memory);
+        if (botzConfig.walkbotType == 0) {
+            if (!botzConfig.shouldGoTowardsPing)
+                return;
+            if (!entity.isOtherEnemy(memory, localPlayer.get())) {
+                botzConfig.playerPingLoc = { event.getFloat("x"),event.getFloat("y"),event.getFloat("z") };
+                botzConfig.finalDestination = botzConfig.playerPingLoc;
+                Misc::pathfind(engineInterfaces, memory);
+            }
+            break;
+        }
+        else if (botzConfig.walkbotType == 1) {
+            Misc::addNewNode(engineInterfaces, { event.getFloat("x"),event.getFloat("y"),event.getFloat("z") });
+            break;
+        }
+        break;
+    case 14:
+        if (event.getInt("userid") == localPlayer.get().getUserId(engine)) {
+            Misc::getMapNameOnce(engineInterfaces);
         }
         break;
     default:break;
@@ -1480,32 +1658,47 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
     case 0:
         ImGui::Checkbox("Toggle bot", &botzConfig.isbotzon);
         if (botzConfig.isbotzon) {
-            ImGui::Checkbox("Should go towards pos", &botzConfig.shouldwalk);
-            ImGui::Checkbox("Go towards teammates' pings", &botzConfig.shouldGoTowardsPing);
-            ImGui::Separator();
+            if (botzConfig.walkbotType == 0) {
+                ImGui::Combo("walkbot type", &botzConfig.walkbotType, "Automatic pathfinding\0Pre-set nodes\0");
+                ImGui::Checkbox("Should go towards pos", &botzConfig.shouldwalk);
+                ImGui::Checkbox("Go towards teammates' pings", &botzConfig.shouldGoTowardsPing);
+                ImGui::Separator();
 
-            ImGui::PushItemWidth(200.f);
-            ImGui::SliderFloat("Max fall damage percent", &botzConfig.dropdownDmg, 0.0f, 0.99f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderInt("Node spacing", &botzConfig.nodeRadius,2,150,"%d", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::PopItemWidth();
-            ImGui::Separator();
+                ImGui::PushItemWidth(200.f);
+                ImGui::SliderFloat("Max fall damage percent", &botzConfig.dropdownDmg, 0.0f, 0.99f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Node spacing", &botzConfig.nodeRadius, 2, 150, "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::PopItemWidth();
+                ImGui::Separator();
 
-            ImGui::Checkbox("Draw nodes", &botzConfig.circlesOrCost);
-            ImGui::Checkbox("Bot debug", &botzConfig.shouldDebug);
-            if (botzConfig.shouldDebug) {
-                ImGui::Text("|");
-                ImGui::SameLine();
-                ImGui::Checkbox("Draw debug information", &botzConfig.pathfindingDebug);
-                ImGui::Text("|");
-                ImGui::SameLine();
-                ImGui::Checkbox("Draw collision check traces", &botzConfig.drawPathfindingTraces);
-                ImGui::Text("|");
-                ImGui::SameLine();
-                if (ImGui::Button("Force reset local pos"))
-                    pathfind(engineInterfaces, memory);
+                ImGui::Checkbox("Draw nodes", &botzConfig.circlesOrCost);
+                ImGui::Checkbox("Bot debug", &botzConfig.shouldDebug);
+                if (botzConfig.shouldDebug) {
+                    ImGui::Text("|");
+                    ImGui::SameLine();
+                    ImGui::Checkbox("Draw debug information", &botzConfig.pathfindingDebug);
+                    ImGui::Text("|");
+                    ImGui::SameLine();
+                    ImGui::Checkbox("Draw collision check traces", &botzConfig.drawPathfindingTraces);
+                    ImGui::Text("|");
+                    ImGui::SameLine();
+                    if (ImGui::Button("Force reset local pos"))
+                        pathfind(engineInterfaces, memory);
 
+                }
+                ImGui::Separator();
             }
-            ImGui::Separator();
+            else if (botzConfig.walkbotType == 1) {
+                ImGui::Combo("walkbot type", &botzConfig.walkbotType, "Automatic pathfinding\0Pre-set nodes\0");
+                ImGui::Checkbox("Draw nodes", &botzConfig.circlesOrCost);
+                ImGui::Text("Current map: ");
+                ImGui::SameLine();
+                ImGui::Text(botzConfig.currentMap.c_str());
+                if(ImGui::Button("Update map name"))
+                    Misc::getMapNameOnce(engineInterfaces);
+                std::string mapInList="Is the map in list: ";
+                mapInList += (std::find(botzConfig.maplist.begin(), botzConfig.maplist.end(), botzConfig.currentMap) != botzConfig.maplist.end() ? "yes" : "no");
+                ImGui::Text(mapInList.c_str());
+            }   
         }
         break;
     case 1:
@@ -1551,8 +1744,19 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         ImGui::InputText("##input", &miscConfig.panoramaEvent);
         if (ImGui::Button("test"))
             Misc::autoqueue();
-        if (ImGui::Button("Start mm"))
-            memory.MatchmakingStart();
+        if(!engineInterfaces.getEngine().isInGame())
+            if (ImGui::Button("Start mm")) {
+                //csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).RunScript(Misc::GetRoot(engineInterfaces.getEngine().isInGame()), "LobbyAPI.LaunchTrainingMap()", "panorama/layout/base.xml", 8, 10, false);
+                miscConfig.matchmakingStartTime = memory.globalVars->realtime;
+            }
+        if (miscConfig.matchmakingStartTime > 0.f) {
+            ImGui::Begin("mmShit", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse);
+            ImGui::Text("in dev atm sorry!!");
+            ImGui::End();
+        }
+        if (miscConfig.matchmakingStartTime + 1.7f < memory.globalVars->realtime)
+            miscConfig.matchmakingStartTime = 0.f;
+            
 
         if (ImGui::Button("I think I might be addicted to csgo"))
             Misc::antiaddiction();

@@ -537,6 +537,9 @@ void GlobalContext::fireGameEventCallback(csgo::GameEventPOD* eventPointer)
     case fnv::hash(csgo::player_ping):
         features->misc.handleBotzEvents(*memory, getEngineInterfaces(), event, ClientInterfaces { retSpoofGadgets->client, * clientInterfaces }, 13);
         break;
+    case fnv::hash(csgo::player_connect):
+        features->misc.handleBotzEvents(*memory, getEngineInterfaces(), event, ClientInterfaces {retSpoofGadgets->client, * clientInterfaces}, 14);
+        break;
     }
 }
 
@@ -552,6 +555,8 @@ void GlobalContext::renderFrame()
         features->misc.chatOverhead(getEngineInterfaces(), *memory);
         features->misc.drawPath(getEngineInterfaces());
         features->misc.drawPathfinding(getEngineInterfaces());
+        features->misc.drawPresetNodes(getEngineInterfaces());
+
 
         features->visuals.thirdperson();
         features->aimbot.updateInput(*config);
