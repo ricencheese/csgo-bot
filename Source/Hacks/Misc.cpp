@@ -1751,21 +1751,21 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
     case 0:
         ImGui::Checkbox(translate.walkToggleBot[miscConfig.language].c_str(), &botzConfig.isbotzon);
         if (botzConfig.isbotzon) {
+            if (ImGui::Button("Walkbot Type", ImVec2(161.f, 20.f))) {
+                miscConfig.walkbotTypeOpen = true;
+            }
+            if (miscConfig.walkbotTypeOpen) {
+                ImGui::SetNextWindowPos(ImGui::GetCursorPos() + ImGui::GetWindowPos());
+                ImGui::Begin("##walkbotSelector", &miscConfig.walkbotTypeOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
+                if (ImGui::Button(translate.walkAutoPath[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
+                    botzConfig.walkbotType = 0;
+                if (ImGui::Button(translate.walkPresetNodes[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
+                    botzConfig.walkbotType = 1;
+                if (!ImGui::IsWindowFocused())
+                    miscConfig.walkbotTypeOpen = false;
+                ImGui::End();
+            }
             if (botzConfig.walkbotType == 0) {
-                if (ImGui::Button("Walkbot Type", ImVec2(161.f, 20.f))) {
-                    miscConfig.walkbotTypeOpen = true;
-                }
-                if (miscConfig.walkbotTypeOpen) {
-                    ImGui::SetNextWindowPos(ImGui::GetCursorPos() + ImGui::GetWindowPos());
-                    ImGui::Begin("##walkbotSelector", &miscConfig.walkbotTypeOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
-                    if (ImGui::Button(translate.walkAutoPath[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
-                        botzConfig.walkbotType = 0;
-                    if (ImGui::Button(translate.walkPresetNodes[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
-                        botzConfig.walkbotType = 1;
-                    if (!ImGui::IsWindowFocused())
-                        miscConfig.walkbotTypeOpen = false;
-                    ImGui::End();
-                }
                 ImGui::Checkbox(translate.walkShouldWalk[miscConfig.language].c_str(), &botzConfig.shouldwalk);
                 ImGui::Checkbox(translate.walkGotoPings[miscConfig.language].c_str(), &botzConfig.shouldGoTowardsPing);
                 ImGui::Separator();
@@ -1794,7 +1794,6 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 ImGui::Separator();
             }
             else if (botzConfig.walkbotType == 1) {
-                ImGui::Combo("##walkbot type", &botzConfig.walkbotType, "Automatic pathfinding\0Pre-set nodes\0");
                 ImGui::Checkbox(translate.walkDrawNodes[miscConfig.language].c_str(), &botzConfig.circlesOrCost);
                 ImGui::Text("Current map: ");
                 ImGui::SameLine();
