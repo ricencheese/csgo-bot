@@ -90,7 +90,6 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     features->misc.findPath(getEngineInterfaces());
 
 
-
     EnginePrediction::run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, *memory, cmd);
 
     features->aimbot.run(features->misc, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *config, *memory, cmd);
@@ -567,10 +566,12 @@ void GlobalContext::renderFrame()
         Chams::updateInput(*config);
         features->glow.updateInput();
 
+        features->misc.gareg(getEngineInterfaces());
         gui->handleToggle(features->misc, getOtherInterfaces());
 
         if (gui->isOpen())
             gui->render(features->misc, features->inventoryChanger, features->glow, features->backtrack, features->visuals, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, *config);
+    
     }
 
     ImGui::EndFrame();

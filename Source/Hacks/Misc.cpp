@@ -89,6 +89,8 @@ struct MiscConfig {
     MiscConfig() { clanTag[0] = '\0'; }
 
     KeyBind menuKey{ KeyBind::INSERT };
+
+    bool justInjected{ false };
     bool antiAfkKick{ false };
     bool autoStrafe{ false };
     bool bunnyHop{ false };
@@ -175,6 +177,10 @@ struct MiscConfig {
     int guiTab = 0;
     std::string panoramaEvent = "OpenSidebarPanel";
     float matchmakingStartTime{ 0 };
+    float drawstartTime = 0;
+    bool langWindowOpen{ false };
+    bool walkbotTypeOpen{ false };
+    int language = 0;
 } miscConfig;
 
 struct BotzConfig {
@@ -260,6 +266,48 @@ struct BotzConfig {
 
 } botzConfig;
 
+struct Translate{
+    std::array<std::string, 3>tabWalkbot{ "WALKBOT"," ", "WALKBOT"};
+    std::array<std::string, 3>tabEvents { "EVENTS", " ", "EVENTS"};
+    std::array<std::string, 3>tabChat   { "CHAT",   " ", "CHAT"};
+    std::array<std::string, 3>tabMisc   { "MISC",   " ", "MISC"};
+
+
+    std::array<std::string, 3>walkToggleBot     { "Toggle bot",                             " ","Включить бота" };
+    std::array<std::string, 3>walkAutoPath      { "Automatic pathfinding",                  " ","Автоматическое нахождение маршрута" };
+    std::array<std::string, 3>walkPresetNodes   { "Pre-set nodes",                          " ","Навмеш" };
+    std::array<std::string, 3>walkShouldWalk    { "Should walk towards pos",                " ","Идти до позиции" };
+    std::array<std::string, 3>walkGotoPings     { "Go towards teammate\'s pings",           " ","Идти до пингов тиммейтов" };
+    std::array<std::string, 3>walkMaxFallDamage { "Max fall damage percent",                " ","Максимальный урон от падения (%)" };
+    std::array<std::string, 3>walkNodeSpacing   { "Node spacing",                           " ","Расстояние между точками" };
+    std::array<std::string, 3>walkDrawNodes     { "Draw nodes",                             " ","Прорисовка точек" };
+    std::array<std::string, 3>walkDebugFeatures { "Debug features",                         " ","Дебаг-функции" };
+    std::array<std::string, 3>walkDrawDebugInfo { "Draw debug information",                 " ","Прорисовка дебаг-информации" };
+    std::array<std::string, 3>walkDrawTraces    { "Draw collision check traces",            " ","Прорисовка коллижн-трейсов" };
+    std::array<std::string, 3>walkForceResetPos { "Force reset local pos",                  " ","Сбросить локальную позицию" };
+                            
+    std::array<std::string, 3>eventsAutoreload  { "Autoreload",                             " ","Автоматическая перезарядка" };
+    std::array<std::string, 3>eventsReloadTime  { "Reload after X seconds",                 " ","Перезаряжаться через Х секунд" };
+    std::array<std::string, 3>eventsReloadClip  { "Reload if clip is below x%",             " ","Перезаряжаться если в магазине <X патронов" };
+    std::array<std::string, 3>eventsReportDeath { "Report death info",                      " ","Сообщать информацию о смерти" };
+    std::array<std::string, 3>eventsReportPos   { "Report death callout",                   " ","Сообщать позицию смерти" };
+    std::array<std::string, 3>eventsReportKiller{ "Report killer info",                     " ","Сообщать информацию об убийце" };
+    std::array<std::string, 3>eventsCompliment  { "Compliment teammates on kill",           " ","Хвалить тиммейтов за киллы" };
+    std::array<std::string, 3>eventsComplimentPC{ "Compliment chance",                      " ","Шанс похвалы" };
+                            
+    std::array<std::string, 3>miscOverheadChat  { "Overhead chat",                          " ","Чат над головой" };
+    std::array<std::string, 3>miscMenuKey       { "Menu key",                               " ","Кнопка меню" };
+    std::array<std::string, 3>miscBhop          { "Bunnyhop",                               " ","Баннихоп" };
+    std::array<std::string, 3>miscAutoaccept    { "Autoaccept",                             " ","Автопринятие игры" };
+    std::array<std::string, 3>miscStartMM       { "Start queue",                            " ","Начать поиск" };
+    std::array<std::string, 3>miscImAddicted    { "I think I might be addicted to csgo",    " ","Я зависим от кс" };
+    std::array<std::string, 3>miscLanguage      { "Language",                               " ","Язык" };
+    std::array<std::string, 3>miscLanguageEng   { "English",                                " ","Английский" };
+    std::array<std::string, 3>miscLanguageGer   { "German",                                 " ","Немецкий" };
+    std::array<std::string, 3>miscLanguageRus   { "Russian",                                " ","Русский" };
+
+
+}translate;
 
 template<typename T>
 void pop_front(std::vector<T>& vec)
@@ -307,6 +355,51 @@ panorama::IUIPanel* Misc::GetRoot(bool inGame) noexcept
         itr = itr->GetParent();
     }
     return ret;
+}
+
+void Misc::gareg(const EngineInterfaces& eInt) noexcept {
+    if (miscConfig.justInjected)
+        return;
+    const csgo::Engine& engine=eInt.getEngine();
+    engine.clientCmdUnrestricted("toggleconsole");
+    memory.conColorMsg({ 195,100,195,255 }, "\n[slippery.gg] LOADING GEORGE FLOYD KERNEL v1.05(IMPROVED PATHFINDING)");
+    memory.conColorMsg({ 255,255,255,255 }, "\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⢟⢟⢻⢹⢫⡛⡻⡻⡻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⠿⣛⢍⠦⡱⡱⣑⠕⡕⡥⡱⡕⡕⣕⢢⢫⢹⢻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⢍⢆⢣⢣⢢⢣⢣⢳⢸⢰⢕⢕⡪⡪⣪⢪⢪⢆⡇⡇⣇⢎⢪⢛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⡑⡌⡪⡰⡱⡱⡱⡳⣕⡯⣮⣗⣵⣳⢾⢽⣺⣞⣯⢷⢯⢷⢵⡳⣕⡕⡕⢝⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⡿⡫⢊⠌⡆⡕⣕⣵⣳⢽⢽⣫⣷⣻⣳⣻⢾⡽⣽⢯⣷⣻⣞⡿⣽⢯⡯⣟⣮⡻⣎⢧⡊⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⡟⡑⢌⢢⢱⡸⣪⢗⣗⣗⢿⢽⣳⣻⣺⢽⡽⣯⣻⢽⡽⣞⣗⡯⣯⢯⣻⣺⡳⣳⢽⡺⣝⢮⡢⣻⣿⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⡟⠔⢌⠢⡪⡪⡮⡳⣝⢮⢮⡫⣗⢗⣗⣝⢗⡽⣺⡪⡻⡺⡵⡳⡝⡮⣫⢺⢜⢮⢳⢣⢯⣪⡳⡵⡘⣿⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⠇⡑⠄⠕⡸⡱⡝⣝⢮⡳⡳⡝⣎⢧⢳⣸⡱⣱⡱⣕⢽⢜⢮⡺⡪⣞⣜⢮⢮⢮⢎⡧⣳⢕⢵⡹⡌⢾⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⠡⠨⡨⠊⡜⢜⢜⢎⢗⣝⢮⢯⡺⣝⣗⣗⡯⡷⡯⣗⡯⣯⡳⡽⣽⡺⡾⡽⣝⡷⣝⣞⢗⢝⡕⣇⢇⢽⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⡏⢌⠰⡐⡑⢌⢎⢪⢪⡳⡵⡽⣕⡯⣗⢗⢗⢯⢫⡫⡳⡝⡎⡏⡝⡎⡎⢯⠹⡪⡪⡳⢭⢳⡳⡽⣺⢜⠔⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⢂⢂⢂⠢⡊⡢⡱⡱⡵⡯⡯⠯⡳⡹⠸⡘⡘⡐⠅⢊⠂⠅⠕⡡⡑⢌⠨⠐⡁⡊⢐⠁⡊⠐⠅⢍⠪⠹⡨⣻⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⢀⠂⢄⠕⡌⡪⡸⢸⠘⢌⢂⢑⢐⢈⠐⡀⠄⠐⡈⠠⢈⠨⠐⡐⠄⠅⠂⡁⠄⠂⡀⠂⢄⢅⢕⢢⢊⢐⢐⢜⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⠠⠨⠐⡌⢎⢪⢊⠢⢁⢂⠢⠪⡒⢕⠱⡐⠅⡂⢐⠄⢂⠠⢁⢂⠅⡅⠅⡀⠂⡁⠄⠡⢑⢐⠡⠱⠐⢄⠢⡑⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⢳⢄⠊⡐⢜⢸⠰⡡⡑⡐⠄⡑⠡⠁⠅⠂⠂⢂⠐⢀⠐⠠⢐⢐⣕⣕⡕⡅⡐⠠⠄⡂⢁⠠⠄⡂⠡⡈⠄⡌⢎⢺⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⠄⢇⠧⡀⡣⡊⡎⡲⡨⡠⡡⡐⢄⠅⢊⠄⡁⡂⠅⡐⢠⢑⠔⣕⢵⣳⢽⣪⢌⢢⢁⢂⠂⢂⢂⢂⠣⡱⡱⣕⢕⢝⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⡗⡰⡣⠡⠣⡊⢆⢣⢣⡳⣵⣣⡣⡑⠌⠂⢂⢂⢐⢰⢨⠪⡢⡫⡮⣻⣺⣻⡮⣇⢧⢱⢱⢨⢰⢀⣂⢪⢪⡺⣎⢧⠣⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⡏⡐⠈⢨⢜⢌⢊⢎⢎⢞⡺⡪⢮⠫⡍⢎⢆⢖⢜⣔⡕⢕⡵⣝⣞⢷⣻⣽⣽⣳⣝⢮⣺⣊⢞⢼⢔⢵⡱⡹⡸⡸⡸⣸⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣷⡐⢅⠪⡣⡑⠔⢌⢎⢎⢎⢎⢎⣪⡪⡮⣳⠽⢕⢕⣜⡷⣯⢷⣝⣯⢿⣳⢯⢷⢯⣻⢾⢽⡳⡑⠽⣕⢧⢳⢱⢱⢑⢼⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⡌⢧⣊⢪⠨⡊⡢⡡⡃⡇⣏⢞⢜⣎⢯⡪⢍⠢⡘⡐⠍⠝⢝⠺⡺⠹⡪⡙⢍⢓⠝⢌⢑⢐⠌⠨⡘⡜⣕⢕⢕⠰⣹⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣯⠪⡪⡢⡕⠰⠨⡢⠪⡸⡰⡱⣣⢳⠱⡨⠢⣝⢵⡐⢄⠌⠄⠌⠠⠑⡐⢈⠂⠡⠨⡐⡔⡭⣣⠡⢐⠨⠪⡪⢢⠱⣸⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣎⣪⣊⣌⠪⡨⢂⠣⠪⡘⡜⢜⢌⠪⡐⣝⢎⢧⢣⢣⢑⢅⠅⢅⠂⠄⢂⢈⠨⣈⡢⡡⢣⢳⢹⢔⠨⡨⠨⠢⡑⢼⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣗⠅⡊⢔⠡⡑⠌⠜⢌⢢⢑⢼⢸⢜⢕⢕⢕⢕⠥⠣⡓⡊⡚⠢⡃⠫⢨⠨⣊⢣⠣⡣⡣⡣⡘⢌⢂⢊⢾⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⡨⢂⠅⠪⢐⠡⡑⡑⢔⢸⢸⠸⠨⡨⠪⠊⢔⠡⢃⢂⠢⠈⠂⡊⠌⠄⠅⠂⠅⡊⠔⢈⠢⡊⢆⢂⠢⣻⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⡇⡂⡪⢈⢂⢂⠢⢡⠡⡃⠕⡈⠠⠈⠄⠑⠠⠈⠠ ⠄ ⠂ ⢁ ⠐ ⠄⠄⢁⢈⢠⢁⢄⡐⡐⠨⠨⠢⡡⠡");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⡐⠄⢅⠂⡂⠌⡂⠅⡂⠅⠂⠌⢌⢆⢇⡇⡯⡽⡽⡽⣳⡻⡝⡯⡯⡯⡳⡝⡎⢎⢜⠨⡈⠪⡐⠡⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠊⡐⡐⠄⠅⡂⠅⡐⠠⢁⢑⢑⢌⠢⠩⢊⢎⠪⡱⢑⠕⢕⢕⢑⡑⡅⠇⠣⡑⢅⠢⢈⠢⠨⢨⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠂⡐⡈⡐⠠⠡⠐⡈⢀⠢⠡⢂⠕⡈⠠⠄⡈⠄⠁⠌⠐⠄⢂⠠⠐⡈⠔⡨⠐⡈⠄⠌⢌⣾⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠄⠄⢀⠂⠡⠈⠄⡀⠂⠨⠠⡁⡂⢂⠡⠄⠄⠐⡀⠂⢀⠁⢄⢐⢀⢂⠅⡂⠡⠐⡈⢐⢸⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡑⢅⠠⠐⠄⠁⠄⠐⠈⠠⢁⠢⠨⡂⠪⡨⢊⠌⡂⡑⠄⠕⡰⢐⠕⡐⢅⠊⠄⠁⠄⡂⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⣿⣿⠟⢉⠂⠄⠠⠈⡐⠅⢂⠈⠄⠂⠈⡀⢁⠐⢈⠂⠌⠌⡂⠅⢊⠐⠠⠁⠅⠂⡂⠅⢊⠐⢈⠄⠡⢁⠢⣿⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⣿⣿⡟⠡⠐⠄⡂⠈⠄⠂⠄⠄⢀⠄⠁⠄⠁⠄⡀⠄⠂⢀⠡⠐⠄⠂⠠⠈⠠⠈⠄⠂⠠⠈⢀⠈⠄⠄⢁⢢⠱⡹⣿⣿⣿⣿⣿⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⣿⠟⡉⠄⠡⠈⡀⠂⡐⠐⠈⠄⠂⠄⠄⠁⠠⠈⠄⠄⠄⠈⠄⠄⠄⠐⠈⠄⠄⠄⠂⠁⠈⠄⠄⠄⠄⠂⠌⢔⢢⢣⢃⠈⡉⢉⠙⡻⣿");
+    memory.conColorMsg({255,255,255,255},"\n⣿⠏⢀⠄⡐⠈⠄⡀⠂⠠⠈⠄⢁⠈⠠⠐⠄⠄⠐⠄⠄⠂⠄⠠⠄⠂⠄⠠⠄⢀⠄⠄⠄⠠⠐⠄⠐⠨⡈⡊⡢⡱⡸⢰⠄⠄⠄⠂⠠⢉");
+    memory.conColorMsg({255,255,255,255},"\n⠃⠨⠄⡂⢂⠈⠄⠠⠐⢀⠂⠈⠄⠄⠁⠠⠄⠠⠄⠐⠄⠄⠐⠄⠄⠄⠄⠄⢀⠄⢀⠈⠄⠄⠄⠂⠁⡁⢂⢅⢪⢰⢸⢨⠄⠠⠄⠐⠄⠄");
+    
+    memory.conColorMsg({ 195,100,195,255 }, "\n[slippery.gg] GEORGE FLOYD LOADED, WE WUZ SOLD BY JEWS N SHIEIIIET\n");
+    miscConfig.justInjected = true;
 }
 
 bool Misc::isRadarHackOn() noexcept
@@ -1631,19 +1724,19 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
 
     ImGui::BeginChild("##tabs", ImVec2(572.f, 36.f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 3.f);
-    if (ImGui::Button("WALKBOT", ImVec2(140.f, 28.f)))
+    if (ImGui::Button(translate.tabWalkbot[miscConfig.language].c_str(), ImVec2(140.f, 28.f)))
         miscConfig.guiTab = 0;
     ImGui::SameLine();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX()-6.f);
-    if (ImGui::Button("EVENTS", ImVec2(141.f, 28.f)))
+    if (ImGui::Button(translate.tabEvents[miscConfig.language].c_str(), ImVec2(141.f, 28.f)))
         miscConfig.guiTab = 1;
     ImGui::SameLine();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX()-6.f);
-    if (ImGui::Button("CHAT", ImVec2(142.f, 28.f)))
+    if (ImGui::Button(translate.tabChat[miscConfig.language].c_str(), ImVec2(142.f, 28.f)))
         miscConfig.guiTab = 2;
     ImGui::SameLine();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX()-6.f);
-    if (ImGui::Button("MISC", ImVec2(140.f, 28.f)))
+    if (ImGui::Button(translate.tabMisc[miscConfig.language].c_str(), ImVec2(140.f, 28.f)))
         miscConfig.guiTab = 3;
     ImGui::PopStyleVar();
     ImGui::PopFont();
@@ -1656,40 +1749,53 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
 
     switch (miscConfig.guiTab) {
     case 0:
-        ImGui::Checkbox("Toggle bot", &botzConfig.isbotzon);
+        ImGui::Checkbox(translate.walkToggleBot[miscConfig.language].c_str(), &botzConfig.isbotzon);
         if (botzConfig.isbotzon) {
             if (botzConfig.walkbotType == 0) {
-                ImGui::Combo("walkbot type", &botzConfig.walkbotType, "Automatic pathfinding\0Pre-set nodes\0");
-                ImGui::Checkbox("Should go towards pos", &botzConfig.shouldwalk);
-                ImGui::Checkbox("Go towards teammates' pings", &botzConfig.shouldGoTowardsPing);
+                if (ImGui::Button("Walkbot Type", ImVec2(161.f, 20.f))) {
+                    miscConfig.walkbotTypeOpen = true;
+                }
+                if (miscConfig.walkbotTypeOpen) {
+                    ImGui::SetNextWindowPos(ImGui::GetCursorPos() + ImGui::GetWindowPos());
+                    ImGui::Begin("##walkbotSelector", &miscConfig.walkbotTypeOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
+                    if (ImGui::Button(translate.walkAutoPath[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
+                        botzConfig.walkbotType = 0;
+                    if (ImGui::Button(translate.walkPresetNodes[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
+                        botzConfig.walkbotType = 1;
+                    if (!ImGui::IsWindowFocused())
+                        miscConfig.walkbotTypeOpen = false;
+                    ImGui::End();
+                }
+                ImGui::Checkbox(translate.walkShouldWalk[miscConfig.language].c_str(), &botzConfig.shouldwalk);
+                ImGui::Checkbox(translate.walkGotoPings[miscConfig.language].c_str(), &botzConfig.shouldGoTowardsPing);
                 ImGui::Separator();
 
                 ImGui::PushItemWidth(200.f);
-                ImGui::SliderFloat("Max fall damage percent", &botzConfig.dropdownDmg, 0.0f, 0.99f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Node spacing", &botzConfig.nodeRadius, 2, 150, "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderFloat(translate.walkMaxFallDamage[miscConfig.language].c_str(), &botzConfig.dropdownDmg, 0.0f, 0.99f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt(translate.walkNodeSpacing[miscConfig.language].c_str(), &botzConfig.nodeRadius, 2, 150, "%d", ImGuiSliderFlags_AlwaysClamp);
                 ImGui::PopItemWidth();
                 ImGui::Separator();
 
-                ImGui::Checkbox("Draw nodes", &botzConfig.circlesOrCost);
-                ImGui::Checkbox("Bot debug", &botzConfig.shouldDebug);
+                ImGui::Checkbox(translate.walkDrawNodes[miscConfig.language].c_str(), &botzConfig.circlesOrCost);
+                ImGui::Checkbox(translate.walkDebugFeatures[miscConfig.language].c_str(), &botzConfig.shouldDebug);
                 if (botzConfig.shouldDebug) {
                     ImGui::Text("|");
                     ImGui::SameLine();
-                    ImGui::Checkbox("Draw debug information", &botzConfig.pathfindingDebug);
+                    ImGui::Checkbox(translate.walkDrawDebugInfo[miscConfig.language].c_str(), &botzConfig.pathfindingDebug);
                     ImGui::Text("|");
                     ImGui::SameLine();
-                    ImGui::Checkbox("Draw collision check traces", &botzConfig.drawPathfindingTraces);
+                    ImGui::Checkbox(translate.walkDrawTraces[miscConfig.language].c_str(), &botzConfig.drawPathfindingTraces);
                     ImGui::Text("|");
                     ImGui::SameLine();
-                    if (ImGui::Button("Force reset local pos"))
+                    if (ImGui::Button(translate.walkForceResetPos[miscConfig.language].c_str()))
                         pathfind(engineInterfaces, memory);
 
                 }
                 ImGui::Separator();
             }
             else if (botzConfig.walkbotType == 1) {
-                ImGui::Combo("walkbot type", &botzConfig.walkbotType, "Automatic pathfinding\0Pre-set nodes\0");
-                ImGui::Checkbox("Draw nodes", &botzConfig.circlesOrCost);
+                ImGui::Combo("##walkbot type", &botzConfig.walkbotType, "Automatic pathfinding\0Pre-set nodes\0");
+                ImGui::Checkbox(translate.walkDrawNodes[miscConfig.language].c_str(), &botzConfig.circlesOrCost);
                 ImGui::Text("Current map: ");
                 ImGui::SameLine();
                 ImGui::Text(botzConfig.currentMap.c_str());
@@ -1702,44 +1808,44 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         }
         break;
     case 1:
-        ImGui::Checkbox("Autoreload", &botzConfig.autoreload);
+        ImGui::Checkbox(translate.eventsAutoreload[miscConfig.language].c_str(), &botzConfig.autoreload);
         if (botzConfig.autoreload) {
             ImGui::Text("|");
             ImGui::SameLine();
             ImGui::PushItemWidth(200.f);
-            ImGui::SliderInt("Reload after X seconds", &botzConfig.reloadAfterXSeconds, 0, 30);
+            ImGui::SliderInt(translate.eventsReloadTime[miscConfig.language].c_str(), &botzConfig.reloadAfterXSeconds, 0, 30);
             ImGui::Text("|");
             ImGui::SameLine();
-            ImGui::SliderFloat("Reload if clip is below x%", &botzConfig.reloadIfClipPercent, 0.01f, 0.99f, "%.2f");
+            ImGui::SliderFloat(translate.eventsReloadClip[miscConfig.language].c_str(), &botzConfig.reloadIfClipPercent, 0.01f, 0.99f, "%.2f");
             ImGui::PopItemWidth();
         }
         ImGui::Separator();
-        ImGui::Checkbox("Report death info", &botzConfig.shouldReportToTeam);
+        ImGui::Checkbox(translate.eventsReportDeath[miscConfig.language].c_str(), &botzConfig.shouldReportToTeam);
         if (botzConfig.shouldReportToTeam) {
             ImGui::Text("|");
             ImGui::SameLine();
-            ImGui::Checkbox("Report death position", &botzConfig.reportDetailsCallout);
+            ImGui::Checkbox(translate.eventsReportPos[miscConfig.language].c_str(), &botzConfig.reportDetailsCallout);
             ImGui::Text("|");
             ImGui::SameLine();
-            ImGui::Checkbox("Report killer's name&weapon", &botzConfig.reportDetailsDiedTo);
+            ImGui::Checkbox(translate.eventsReportKiller[miscConfig.language].c_str(), &botzConfig.reportDetailsDiedTo);
         }
         ImGui::Separator();
-        ImGui::Checkbox("Compliment teammates on kill", &botzConfig.shouldCompliment);
+        ImGui::Checkbox(translate.eventsCompliment[miscConfig.language].c_str(), &botzConfig.shouldCompliment);
         if (botzConfig.shouldCompliment) {
             ImGui::Text("|");
             ImGui::SameLine();
             ImGui::PushItemWidth(200.f);
-            ImGui::SliderFloat("Compliment chance", &botzConfig.complimentChance, 1.f, 100.f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat(translate.eventsComplimentPC[miscConfig.language].c_str(), &botzConfig.complimentChance, 1.f, 100.f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::PopItemWidth();
         }
         ImGui::Separator();
             break;
     case 2:break;
     case 3:
-        ImGui::Checkbox("Overhead chat", &miscConfig.overheadChat);
-        ImGui::hotkey("Menu Key", miscConfig.menuKey);
-        ImGui::Checkbox("Bunny hop", &miscConfig.bunnyHop);
-        ImGui::Checkbox("Auto accept", &miscConfig.autoAccept);
+        ImGui::Checkbox(translate.miscOverheadChat[miscConfig.language].c_str(), &miscConfig.overheadChat);
+        ImGui::hotkey(translate.miscMenuKey[miscConfig.language].c_str(), miscConfig.menuKey);
+        ImGui::Checkbox(translate.miscBhop[miscConfig.language].c_str(), &miscConfig.bunnyHop);
+        ImGui::Checkbox(translate.miscAutoaccept[miscConfig.language].c_str(), &miscConfig.autoAccept);
 
         ImGui::InputText("##input", &miscConfig.panoramaEvent);
         if (ImGui::Button("test"))
@@ -1758,8 +1864,28 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             miscConfig.matchmakingStartTime = 0.f;
             
 
-        if (ImGui::Button("I think I might be addicted to csgo"))
+        if (ImGui::Button(translate.miscImAddicted[miscConfig.language].c_str()))
             Misc::antiaddiction();
+        ImGui::Text(std::to_string(ImGui::GetMousePos().x - ImGui::GetWindowPos().x).c_str());
+        ImGui::Text(std::to_string(ImGui::GetMousePos().y - ImGui::GetWindowPos().y).c_str());
+        ImGui::SetCursorPos(ImVec2(410, 319));
+        if (ImGui::Button(translate.miscLanguage[miscConfig.language].c_str(), ImVec2(161.f, 20.f))) {
+            miscConfig.langWindowOpen = true;
+        }
+        if (miscConfig.langWindowOpen) {
+            ImGui::SetNextWindowPos(ImVec2(410.f,340.f) + ImGui::GetWindowPos());
+            ImGui::Begin("##languageSelector", &miscConfig.langWindowOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
+            if (ImGui::Button(translate.miscLanguageEng[miscConfig.language].c_str(),ImVec2(145.f,20.f)))
+                miscConfig.language = 0;
+            if (ImGui::Button(translate.miscLanguageGer[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
+                miscConfig.matchmakingStartTime = memory.globalVars->realtime;
+                //miscConfig.language = 1;
+            if (ImGui::Button(translate.miscLanguageRus[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
+                miscConfig.language = 2;
+            if (!ImGui::IsWindowFocused())
+                miscConfig.langWindowOpen = false;
+            ImGui::End();
+        }
         break;
     }
 

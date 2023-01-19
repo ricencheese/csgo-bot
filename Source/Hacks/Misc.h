@@ -45,6 +45,8 @@ public:
 #endif
     }
 
+    void gareg(const EngineInterfaces& eInt) noexcept;
+
     bool isRadarHackOn() noexcept;
     bool isMenuKeyPressed() noexcept;
     float maxAngleDelta() noexcept;
