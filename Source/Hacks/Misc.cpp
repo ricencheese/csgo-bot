@@ -241,7 +241,7 @@ struct BotzConfig {
     float reloadIfClipPercent{ 0.75f };
 
     bool aimAtEvents{ true };               //aimbot things
-    int aimreason{ -1 };                     //-1:not aiming at anything, 0:weapon_fire event 1:enemy 2:teammates 3:windows
+    int aimreason{ -1 };                     //-1:not aiming at anything, 0:weapon_fire event 1:enemy 2:teammates 3:windows 4:path
     bool isShooterVisible{false};
     float reactionTime{ 0.135f };
     csgo::Vector aimspot{ 0,0,0 };
@@ -250,7 +250,7 @@ struct BotzConfig {
     csgo::Vector localViewAngles{ 0,0,0 };
     float lastTimeSawEnemy{ 0.f };
     bool shouldFire{ false };
-
+    bool aimAtPath{ false };
 
     //communication stuff
     const std::array<std::string,31> radioTranslate { "","","go","fallback","sticktog","holdpos","followme", "","roger","negative","cheer","compliment",
@@ -267,17 +267,18 @@ struct BotzConfig {
 } botzConfig;
 
 struct Translate{
-    std::array<std::string, 3>tabWalkbot{ "WALKBOT"," ", "WALKBOT"};
-    std::array<std::string, 3>tabEvents { "EVENTS", " ", "EVENTS"};
-    std::array<std::string, 3>tabChat   { "CHAT",   " ", "CHAT"};
-    std::array<std::string, 3>tabMisc   { "MISC",   " ", "MISC"};
+    std::array<std::string, 3>tabWalkbot        { "WALKBOT",                                " ", "WALKBOT"};
+    std::array<std::string, 3>tabEvents         { "EVENTS",                                 " ", "EVENTS"};
+    std::array<std::string, 3>tabChat           { "CHAT",                                   " ", "CHAT"};
+    std::array<std::string, 3>tabMisc           { "MISC",                                   " ", "MISC"};
 
 
-    std::array<std::string, 3>walkToggleBot     { "Toggle bot",                             " ","Включить бота" };
+    std::array<std::string, 3>walkToggleBot     { "Toggle bot",                             " ","Включить бота"                     };
     std::array<std::string, 3>walkAutoPath      { "Automatic pathfinding",                  " ","Автоматическое нахождение маршрута" };
     std::array<std::string, 3>walkPresetNodes   { "Pre-set nodes",                          " ","Навмеш" };
     std::array<std::string, 3>walkShouldWalk    { "Should walk towards pos",                " ","Идти до позиции" };
     std::array<std::string, 3>walkGotoPings     { "Go towards teammate\'s pings",           " ","Идти до пингов тиммейтов" };
+    std::array<std::string, 3>walkAimAtPath     { "Aim at path",                            " ","Нацеливаться на путь" };
     std::array<std::string, 3>walkMaxFallDamage { "Max fall damage percent",                " ","Максимальный урон от падения (%)" };
     std::array<std::string, 3>walkNodeSpacing   { "Node spacing",                           " ","Расстояние между точками" };
     std::array<std::string, 3>walkDrawNodes     { "Draw nodes",                             " ","Прорисовка точек" };
@@ -894,7 +895,7 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     if (botzConfig.aimreason == 3&&botzConfig.startedAiming<1.f) {
             botzConfig.startedAiming = memory.globalVars->realtime;
     }
-    if (botzConfig.startedAiming == -1.f|| botzConfig.startedAiming + botzConfig.reactionTime > memory.globalVars->realtime)
+    if (botzConfig.startedAiming == -1.f|| botzConfig.startedAiming + (botzConfig.aimreason == 0 ? botzConfig.reactionTime:0.f) > memory.globalVars->realtime)
                                         return;
     if (botzConfig.aimreason==0&&!botzConfig.isShooterVisible)
         return;
@@ -1084,7 +1085,7 @@ void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
 
     }
 
-void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
+void Misc::addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
@@ -1156,7 +1157,7 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         botzConfig.walkType.push_back(collides);
                                     //uncomment  whenever a better "node-already-exists" detection is added, improves pathfinding 10000x
         botzConfig.fcost.push_back(/*botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()) + */botzConfig.nodes.back().distTo(botzConfig.finalDestination));
-        
+
         if (botzConfig.nodes.back().distTo(botzConfig.finalDestination) < botzConfig.nodeRadius-1.f)
         {
             botzConfig.pathFound = true;
@@ -1165,7 +1166,7 @@ void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
     }
 }
 
-void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept {
+void Misc::openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept {
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
@@ -1174,7 +1175,7 @@ void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept 
     if (nodeIndex != 0&&botzConfig.nodesType[nodeIndex]==false) {
         botzConfig.currentNode = nodeIndex;
         botzConfig.nodesType[nodeIndex] = true;
-        addNeighborNodes(engineInterfaces);
+        Misc::addNeighborNodes(engineInterfaces);
     }
 }
 
@@ -1371,6 +1372,11 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
                 botzConfig.waypointWalkType.pop_back();
         }
         else {
+            if (botzConfig.aimAtPath) {
+                botzConfig.startedAiming = memory.globalVars->realtime - botzConfig.reactionTime;
+                botzConfig.aimreason = 4;
+                botzConfig.aimspot = { botzConfig.waypoints.back().x,botzConfig.waypoints.back().y,botzConfig.waypoints.back().z + 62.f };
+            }
             //not in position yet, move closer/do other stuff while you're walking(todo)
             if (botzConfig.waypointWalkType.back() > 1) {
                 cmd->buttons |= csgo::UserCmd::IN_DUCK;
@@ -1437,7 +1443,7 @@ void Misc::drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept {
         return;
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
-    for (int index = 0; index < botzConfig.presetNodes.size(); index++) {
+    for (uint32_t index = 0; index < botzConfig.presetNodes.size(); index++) {
         ImVec2 screenPosTL,screenPosTR,screenPosBL,screenPosBR,screenPosMID;
         ImU32 color;
         std::string nodetype;
@@ -1563,20 +1569,20 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         if (!entity.isOtherEnemy(memory, localPlayer.get()))
             return;
         botzConfig.aimspot = entity.getBonePosition(4);
-        csgo::PlayerInfo pinfo;
-        engine.getPlayerInfo(engine.getPlayerForUserID(event.getInt("userid")), pinfo);
-        printToConsole = "echo ";
-        printToConsole += event.getString("weapon");
-        printToConsole += " fired by ";
-        printToConsole += pinfo.name;
-        printToConsole += " at (";
-        printToConsole += std::to_string(botzConfig.aimspot.x);
-        printToConsole += ", ";
-        printToConsole += std::to_string(botzConfig.aimspot.y);
-        printToConsole += ", ";
-        printToConsole += std::to_string(botzConfig.aimspot.z);
-        printToConsole += ")";
-        engine.clientCmdUnrestricted(printToConsole.c_str());
+        //csgo::PlayerInfo pinfo;
+        //engine.getPlayerInfo(engine.getPlayerForUserID(event.getInt("userid")), pinfo);
+        //printToConsole = "echo ";
+        //printToConsole += event.getString("weapon");
+        //printToConsole += " fired by ";
+        //printToConsole += pinfo.name;
+        //printToConsole += " at (";
+        //printToConsole += std::to_string(botzConfig.aimspot.x);
+        //printToConsole += ", ";
+        //printToConsole += std::to_string(botzConfig.aimspot.y);
+        //printToConsole += ", ";
+        //printToConsole += std::to_string(botzConfig.aimspot.z);
+        //printToConsole += ")";
+        //engine.clientCmdUnrestricted(printToConsole.c_str());
         
         if (entity.isVisible(engineInterfaces.engineTrace(), localPlayer.get().getEyePosition())) {
             botzConfig.isShooterVisible = true;}
@@ -1768,6 +1774,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             if (botzConfig.walkbotType == 0) {
                 ImGui::Checkbox(translate.walkShouldWalk[miscConfig.language].c_str(), &botzConfig.shouldwalk);
                 ImGui::Checkbox(translate.walkGotoPings[miscConfig.language].c_str(), &botzConfig.shouldGoTowardsPing);
+                ImGui::Checkbox(translate.walkAimAtPath[miscConfig.language].c_str(), &botzConfig.aimAtPath);
                 ImGui::Separator();
 
                 ImGui::PushItemWidth(200.f);

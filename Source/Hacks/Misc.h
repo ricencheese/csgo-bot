@@ -72,6 +72,7 @@ public:
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     void chatBot(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     //botzzzzzzzzzzz shiz
+        
         //proper pathfinding
         void aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept;
         void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
@@ -88,7 +89,8 @@ public:
         void drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept;
         void getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept;
 
-
+        void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept;
+    void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept;
     void handleRadioCommands(const csgo::GameEvent& event, const EngineInterfaces& engineInterfaces) noexcept;
     void handleBotzEvents(const Memory& memory,const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, const ClientInterfaces& clientInterfaces,int eventType) noexcept;
 
