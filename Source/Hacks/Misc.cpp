@@ -935,7 +935,7 @@ void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd*
                                 localPlayer.get().getEyePosition().y + sin(Helpers::deg2rad(botzConfig.localViewAngles.y + 19.9f * botzConfig.tracerayAngle)) * 60,
                                 localPlayer.get().getEyePosition().z };
     const csgo::Vector lPlayerEyes = localPlayer.get().getEyePosition();
-    engineInterfaces.engineTrace().traceRay({ lPlayerEyes, viewangleshit}, 0x2, localPlayer.get().getPOD(), traceXp);
+    engineInterfaces.engineTrace().traceRay({ lPlayerEyes, viewangleshit}, CONTENTS_WINDOW, localPlayer.get().getPOD(), traceXp);
     if (botzConfig.tracerayAngle < 9)
         botzConfig.tracerayAngle++;
     else botzConfig.tracerayAngle = -9;
