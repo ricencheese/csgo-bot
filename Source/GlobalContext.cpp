@@ -566,7 +566,7 @@ void GlobalContext::renderFrame()
         Chams::updateInput(*config);
         features->glow.updateInput();
 
-        features->misc.gareg(getEngineInterfaces());
+        //features->misc.gareg(getEngineInterfaces()); :tf:
         gui->handleToggle(features->misc, getOtherInterfaces());
 
         if (gui->isOpen())

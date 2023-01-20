@@ -198,7 +198,7 @@ struct BotzConfig {
     int nodeRadius{ 33 };
     std::vector<int> waypointWalkType;
     float dropdownDmg{ 0.f };
-
+    bool improvedPathfinding{ false };
 
         //walkbot type 0 (auto pathfinding)
     std::vector<csgo::Vector> nodes;//node positions
@@ -229,14 +229,14 @@ struct BotzConfig {
     float hitglass{ 0.f };
     float tracerayAngle{ 0.f };
 
-    bool shouldDebug{ true };               //debug drawing and ermmmmmm
+    bool shouldDebug{ false };               //debug drawing and ermmmmmm
     float posDrawSize{ 1.5f };
     bool pathfindingDebug{ false };
     bool drawPathfindingTraces{ false };
     bool circlesOrCost{ false };
 
 
-    bool autoreload{ true };                //reloadbot logic
+    bool autoreload{ false };                //reloadbot logic
     float lastReload{ 0.0f };
     int reloadAfterXSeconds{ 5 };
     float reloadIfClipPercent{ 0.75f };
@@ -268,45 +268,45 @@ struct BotzConfig {
 } botzConfig;
 
 struct Translate{
-    std::array<std::string, 3>tabWalkbot        { "WALKBOT",                                " ", "WALKBOT"};
-    std::array<std::string, 3>tabEvents         { "EVENTS",                                 " ", "EVENTS"};
-    std::array<std::string, 3>tabChat           { "CHAT",                                   " ", "CHAT"};
-    std::array<std::string, 3>tabMisc           { "MISC",                                   " ", "MISC"};
+    std::array<std::string, 3>tabWalkbot        { "WALKBOT",                                "WALKBOT",                                      "WALKBOT"};
+    std::array<std::string, 3>tabEvents         { "EVENTS",                                 "EREIGNISSE",                                   "EVENTS"};
+    std::array<std::string, 3>tabChat           { "CHAT",                                   "CHAT",                                         "CHAT"};
+    std::array<std::string, 3>tabMisc           { "MISC",                                   "VERSCHIEDENES",                                "MISC"};
 
 
-    std::array<std::string, 3>walkToggleBot     { "Toggle bot",                             " ","Включить бота"                     };
-    std::array<std::string, 3>walkAutoPath      { "Automatic pathfinding",                  " ","Автоматическое нахождение маршрута" };
-    std::array<std::string, 3>walkPresetNodes   { "Pre-set nodes",                          " ","Навмеш" };
-    std::array<std::string, 3>walkShouldWalk    { "Should walk towards pos",                " ","Идти до позиции" };
-    std::array<std::string, 3>walkGotoPings     { "Go towards teammate\'s pings",           " ","Идти до пингов тиммейтов" };
-    std::array<std::string, 3>walkAimAtPath     { "Aim at path",                            " ","Нацеливаться на путь" };
-    std::array<std::string, 3>walkMaxFallDamage { "Max fall damage percent",                " ","Максимальный урон от падения (%)" };
-    std::array<std::string, 3>walkNodeSpacing   { "Node spacing",                           " ","Расстояние между точками" };
-    std::array<std::string, 3>walkDrawNodes     { "Draw nodes",                             " ","Прорисовка точек" };
-    std::array<std::string, 3>walkDebugFeatures { "Debug features",                         " ","Дебаг-функции" };
-    std::array<std::string, 3>walkDrawDebugInfo { "Draw debug information",                 " ","Прорисовка дебаг-информации" };
-    std::array<std::string, 3>walkDrawTraces    { "Draw collision check traces",            " ","Прорисовка коллижн-трейсов" };
-    std::array<std::string, 3>walkForceResetPos { "Force reset local pos",                  " ","Сбросить локальную позицию" };
+    std::array<std::string, 3>walkToggleBot     { "Toggle bot",                             "Toggle bot",                                   "Включить бота"                     };
+    std::array<std::string, 3>walkAutoPath      { "Automatic pathfinding",                  "Automatischer Wegfinder",                      "Автоматическое нахождение маршрута" };
+    std::array<std::string, 3>walkPresetNodes   { "Pre-set nodes",                          "Voreingestellte Nodes",                        "Навмеш" };
+    std::array<std::string, 3>walkShouldWalk    { "Should walk towards pos",                "In Richtung Position gehen",                   "Идти до позиции" };
+    std::array<std::string, 3>walkGotoPings     { "Go towards teammate\'s pings",           "Gehe zu Markierungen von Teammates",           "Идти до пингов тиммейтов" };
+    std::array<std::string, 3>walkAimAtPath     { "Aim at path",                            "Sollte auf den Weg zielen",                    "Нацеливаться на путь" };
+    std::array<std::string, 3>walkMaxFallDamage { "Max fall damage percent",                "Maximaler Fallschaden %",                      "Максимальный урон от падения (%)" };
+    std::array<std::string, 3>walkNodeSpacing   { "Node spacing",                           "Node Abstand",                                 "Расстояние между точками" };
+    std::array<std::string, 3>walkDrawNodes     { "Draw nodes",                             "Zeichne Nodes",                                "Прорисовка точек" };
+    std::array<std::string, 3>walkDebugFeatures { "Debug features",                         "Debug Features",                               "Дебаг-функции" };
+    std::array<std::string, 3>walkDrawDebugInfo { "Draw debug information",                 "Zeige Debug-Informationen",                    "Прорисовка дебаг-информации" };
+    std::array<std::string, 3>walkDrawTraces    { "Draw collision check traces",            "Zeige Kollision Prüfe Spuren",                 "Прорисовка коллижн-трейсов" };
+    std::array<std::string, 3>walkForceResetPos { "Force reset local pos",                  "Erzwinge den reset der lokalen Position",      "Сбросить локальную позицию" };
                             
-    std::array<std::string, 3>eventsAutoreload  { "Autoreload",                             " ","Автоматическая перезарядка" };
-    std::array<std::string, 3>eventsReloadTime  { "Reload after X seconds",                 " ","Перезаряжаться через Х секунд" };
-    std::array<std::string, 3>eventsReloadClip  { "Reload if clip is below x%",             " ","Перезаряжаться если в магазине <X патронов" };
-    std::array<std::string, 3>eventsReportDeath { "Report death info",                      " ","Сообщать информацию о смерти" };
-    std::array<std::string, 3>eventsReportPos   { "Report death callout",                   " ","Сообщать позицию смерти" };
-    std::array<std::string, 3>eventsReportKiller{ "Report killer info",                     " ","Сообщать информацию об убийце" };
-    std::array<std::string, 3>eventsCompliment  { "Compliment teammates on kill",           " ","Хвалить тиммейтов за киллы" };
-    std::array<std::string, 3>eventsComplimentPC{ "Compliment chance",                      " ","Шанс похвалы" };
+    std::array<std::string, 3>eventsAutoreload  { "Autoreload",                             "Auto-nachladen",                               "Автоматическая перезарядка" };
+    std::array<std::string, 3>eventsReloadTime  { "Reload after X seconds",                 "Nachladen nach X Sekunden",                    "Перезаряжаться через Х секунд" };
+    std::array<std::string, 3>eventsReloadClip  { "Reload if clip is below x%",             "Nachladen wenn Magazin unter X% ist",          "Перезаряжаться если в магазине <X патронов" };
+    std::array<std::string, 3>eventsReportDeath { "Report death info",                      "Zeige Todesinfo an",                           "Сообщать информацию о смерти" };
+    std::array<std::string, 3>eventsReportPos   { "Report death callout",                   "Zeige Todesort an",                            "Сообщать позицию смерти" };
+    std::array<std::string, 3>eventsReportKiller{ "Report killer info",                     "Zeige Name und Waffe des Killers",             "Сообщать информацию об убийце" };
+    std::array<std::string, 3>eventsCompliment  { "Compliment teammates on kill",           "Komplimentiere Teammates bei kill",            "Хвалить тиммейтов за киллы" };
+    std::array<std::string, 3>eventsComplimentPC{ "Compliment chance",                      "Komplimentiere Chance",                        "Шанс похвалы" };
                             
-    std::array<std::string, 3>miscOverheadChat  { "Overhead chat",                          " ","Чат над головой" };
-    std::array<std::string, 3>miscMenuKey       { "Menu key",                               " ","Кнопка меню" };
-    std::array<std::string, 3>miscBhop          { "Bunnyhop",                               " ","Баннихоп" };
-    std::array<std::string, 3>miscAutoaccept    { "Autoaccept",                             " ","Автопринятие игры" };
-    std::array<std::string, 3>miscStartMM       { "Start queue",                            " ","Начать поиск" };
-    std::array<std::string, 3>miscImAddicted    { "I think I might be addicted to csgo",    " ","Я зависим от кс" };
-    std::array<std::string, 3>miscLanguage      { "Language",                               " ","Язык" };
-    std::array<std::string, 3>miscLanguageEng   { "English",                                " ","Английский" };
-    std::array<std::string, 3>miscLanguageGer   { "German",                                 " ","Немецкий" };
-    std::array<std::string, 3>miscLanguageRus   { "Russian",                                " ","Русский" };
+    std::array<std::string, 3>miscOverheadChat  { "Overhead chat",                          "Overhead chat",                                "Чат над головой" };
+    std::array<std::string, 3>miscMenuKey       { "Menu key",                               "Menütaste",                                    "Кнопка меню" };
+    std::array<std::string, 3>miscBhop          { "Bunnyhop",                               "Bunnyhop",                                     "Баннихоп" };
+    std::array<std::string, 3>miscAutoaccept    { "Autoaccept",                             "Automatisch akzeptieren",                      "Автопринятие игры" };
+    std::array<std::string, 3>miscStartMM       { "Start queue",                            "Starte Matchmaking",                           "Начать поиск" };
+    std::array<std::string, 3>miscImAddicted    { "I think I might be addicted to csgo",    "Ich glaube ich bin süchtig nach csgo...",      "Я зависим от кс" };
+    std::array<std::string, 3>miscLanguage      { "Language",                               "Sprache",                                      "Язык" };
+    std::array<std::string, 3>miscLanguageEng   { "English",                                "Englisch",                                     "Английский" };
+    std::array<std::string, 3>miscLanguageGer   { "German",                                 "Deutsche",                                     "Немецкий" };
+    std::array<std::string, 3>miscLanguageRus   { "Russian",                                "Russische",                                    "Русский" };
 
 
 }translate;
@@ -1013,10 +1013,15 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos,csg
     if (traceToParent.contents != 0)
         botzConfig.traceToParentIntersects = true;
     else botzConfig.traceToParentIntersects = false;
-    const bool walkable{ (traceHBottom1.fraction == 1.0f && traceHBottom2.fraction == 1.0f && traceHBottomD1.fraction == 1.0f && traceHBottomD2.fraction == 1.0f) }, 
-               crouchable{ (traceHMiddle1.fraction == 1.0f && traceHMiddle2.fraction == 1.0f && traceHMiddleD1.fraction == 1.0f && traceHMiddleD2.fraction == 1.0f) }, 
-               jumpable{ (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f) }, 
+    const bool walkable{ (traceHBottom1.contents==0 && traceHBottom2.contents == 0 && traceHBottomD1.contents == 0 && traceHBottomD2.contents == 0) },
+               crouchable{ (traceHMiddle1.contents == 0 && traceHMiddle2.contents == 0 && traceHMiddleD1.contents == 0 && traceHMiddleD2.contents == 0) },
+               jumpable{ (traceHTop1.contents == 0 && traceHTop2.contents == 0 && traceHTopD1.contents == 0 && traceHTopD2.contents == 0) },
                forcejumpable{parentpos.z+36.f < pos.z };
+
+    //    const bool walkable{ (traceHBottom1.fraction == 1.0f && traceHBottom2.fraction == 1.0f && traceHBottomD1.fraction == 1.0f && traceHBottomD2.fraction == 1.0f) }, 
+    //    crouchable{ (traceHMiddle1.fraction == 1.0f && traceHMiddle2.fraction == 1.0f && traceHMiddleD1.fraction == 1.0f && traceHMiddleD2.fraction == 1.0f) },
+    //    jumpable{ (traceHTop1.fraction == 1.0f && traceHTop2.fraction == 1.0f && traceHTopD1.fraction == 1.0f && traceHTopD2.fraction == 1.0f) },
+
     if (forcejumpable)              //jump
         return 2;
     else if (walkable && crouchable&&jumpable) //just walk
@@ -1029,7 +1034,7 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos,csg
 void Misc::drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept {
     if (!botzConfig.isbotzon)
         return;
-    if (!botzConfig.pathfindingDebug)
+    if (!botzConfig.pathfindingDebug||!botzConfig.shouldDebug)
         return;
     if (!localPlayer)
         return;
@@ -1144,7 +1149,7 @@ void Misc::addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         botzConfig.nodesParents.push_back(botzConfig.currentNode);
         botzConfig.walkType.push_back(collides);
                                     //uncomment  whenever a better "node-already-exists" detection is added, improves pathfinding 10000x
-        botzConfig.fcost.push_back(/*botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()) + */botzConfig.nodes.back().distTo(botzConfig.finalDestination));
+        botzConfig.fcost.push_back((!botzConfig.improvedPathfinding?botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()):0.f) + botzConfig.nodes.back().distTo(botzConfig.finalDestination));
 
         if (botzConfig.nodes.back().distTo(botzConfig.finalDestination) < botzConfig.nodeRadius-1.f)
         {
@@ -1242,7 +1247,8 @@ void Misc::drawPath(const EngineInterfaces& engineInterfaces) noexcept {
         Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x - botzConfig.nodeRadius/2.f,botzConfig.nodes[index].y - botzConfig.nodeRadius/2.f,botzConfig.nodes[index].z }, screenPosBL);
         Helpers::worldToScreenPixelAligned({ botzConfig.nodes[index].x + botzConfig.nodeRadius/2.f,botzConfig.nodes[index].y - botzConfig.nodeRadius/2.f,botzConfig.nodes[index].z }, screenPosBR);
 
-        if (screenPosMID.x < 1 || screenPosTL.x < 1 || screenPosTR.x < 1 || screenPosBL.x < 1 || screenPosBL.x < 1|| screenPosMID.y < 1 || screenPosTL.y < 1 || screenPosTR.y < 1 || screenPosBL.y < 1 || screenPosBL.y < 1)
+        if (screenPosMID.x < 5 || screenPosTL.x < 5 || screenPosTR.x < 5 || screenPosBL.x < 5 || screenPosBR.x < 5||
+            screenPosMID.y < 5 || screenPosTL.y < 5 || screenPosTR.y < 5 || screenPosBL.y < 5 || screenPosBR.y < 5)
             continue;
         if (botzConfig.nodesType[index]) {
             dlistfg->AddTriangleFilled(screenPosTL, screenPosTR, screenPosMID, 0x9944AA44);
@@ -1761,10 +1767,17 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             }
             if (botzConfig.walkbotType == 0) {
                 ImGui::Checkbox(translate.walkShouldWalk[miscConfig.language].c_str(), &botzConfig.shouldwalk);
+                ImGui::Checkbox("improved pathfinding", &botzConfig.improvedPathfinding);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("!!!!!!!Will get stuck on uneven ground!!!!!!!");
+                    ImGui::EndTooltip();
+                }
+                    
                 ImGui::Checkbox(translate.walkGotoPings[miscConfig.language].c_str(), &botzConfig.shouldGoTowardsPing);
                 ImGui::Checkbox(translate.walkAimAtPath[miscConfig.language].c_str(), &botzConfig.aimAtPath);
                 ImGui::Separator();
-
+                
                 ImGui::PushItemWidth(200.f);
                 ImGui::SliderFloat(translate.walkMaxFallDamage[miscConfig.language].c_str(), &botzConfig.dropdownDmg, 0.0f, 0.99f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
                 ImGui::SliderInt(translate.walkNodeSpacing[miscConfig.language].c_str(), &botzConfig.nodeRadius, 2, 150, "%d", ImGuiSliderFlags_AlwaysClamp);
