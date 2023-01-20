@@ -905,10 +905,8 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
                            botzConfig.localViewAngles.y + relang.y*sin(memory.globalVars->realtime - botzConfig.startedAiming-botzConfig.aimtime[0] + botzConfig.reactionTime) / 2,
                            0.f});
     
-    if ( -0.3f<Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), botzConfig.aimspot, botzConfig.localViewAngles).x &&
-        Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), botzConfig.aimspot, botzConfig.localViewAngles).x<0.3f&&
-         -0.3f<Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), botzConfig.aimspot, botzConfig.localViewAngles).y&&
-        Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), botzConfig.aimspot, botzConfig.localViewAngles).y<0.3f){
+    if ( -0.3f<relang.x && relang.x<0.3f&&
+         -0.3f<relang.y && relang.y<0.3f){
             botzConfig.startedAiming = -1.f;
             if (botzConfig.aimreason == 3) {
                 botzConfig.shouldFire = true;
@@ -1090,7 +1088,7 @@ void Misc::addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         return;
     if (!localPlayer.get().isAlive())
         return;
-
+    const csgo::EngineTrace eTrace = engineInterfaces.engineTrace();
     for (int index = 0; index < 8; index++) {
         csgo::Vector potentialOpen;
         csgo::Vector offset{ 0,0,0 };
@@ -1099,44 +1097,32 @@ void Misc::addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         //0 7 6
         switch (index) {
         case 0:
-            offset.x = 0.f - botzConfig.nodeRadius;
-            offset.y = 0.f - botzConfig.nodeRadius;
-            offset.z = 0.f;
+            offset.x -= botzConfig.nodeRadius;
+            offset.y -= botzConfig.nodeRadius;
             break;
         case 1:
-            offset.x = 0.f - botzConfig.nodeRadius;
-            offset.y = 0.f;
-            offset.z = 0.f;
+            offset.x -= botzConfig.nodeRadius;
             break;
         case 2:
-            offset.x = 0.f - botzConfig.nodeRadius;
-            offset.y = 0.f + botzConfig.nodeRadius;
-            offset.z = 0.f;
+            offset.x -= botzConfig.nodeRadius;
+            offset.y += botzConfig.nodeRadius;
             break;
         case 3:
-            offset.x = 0.f;
-            offset.y = 0.f + botzConfig.nodeRadius;
-            offset.z = 0.f;
+            offset.y += botzConfig.nodeRadius;
             break;
         case 4:
-            offset.x = 0.f + botzConfig.nodeRadius;
-            offset.y = 0.f + botzConfig.nodeRadius;
-            offset.z = 0.f;
+            offset.x += botzConfig.nodeRadius;
+            offset.y += botzConfig.nodeRadius;
             break;
         case 5:
-            offset.x = 0.f + botzConfig.nodeRadius;
-            offset.y = 0.f;
-            offset.z = 0.f;
+            offset.x += botzConfig.nodeRadius;
             break;
         case 6:
-            offset.x = 0.f + botzConfig.nodeRadius;
-            offset.y = 0.f - botzConfig.nodeRadius;
-            offset.z = 0.f;
-            break;
-        case 7:
-            offset.x = 0.f;
-            offset.y = 0.f - botzConfig.nodeRadius;
-            offset.z = 0.f;
+            offset.x += botzConfig.nodeRadius;
+            offset.y -= botzConfig.nodeRadius;
+            break;   
+        case 7:      
+            offset.y -=botzConfig.nodeRadius;
             break;
         default:break;
         }
