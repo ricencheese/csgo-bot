@@ -279,6 +279,8 @@ struct Translate{
     std::array<std::string, 3>walkPresetNodes   { "Pre-set nodes",                          "Voreingestellte Nodes",                        "Навмеш" };
     std::array<std::string, 3>walkShouldWalk    { "Should walk towards pos",                "In Richtung Position gehen",                   "Идти до позиции" };
     std::array<std::string, 3>walkGotoPings     { "Go towards teammate\'s pings",           "Gehe zu Markierungen von Teammates",           "Идти до пингов тиммейтов" };
+    std::array<std::string, 3>walkImprovedPfind { "Improved pathfinding",                   "Verbesserte Wegfindung",                       "Улучшенный патхфайндинг" };
+    std::array<std::string, 3>walkImprovedPWarn { "Will get stuck on uneven ground!!!",     "Wird auf unebenem Untergrund stecken bleiben!","Застревает на неровной поверхности!" };
     std::array<std::string, 3>walkAimAtPath     { "Aim at path",                            "Sollte auf den Weg zielen",                    "Нацеливаться на путь" };
     std::array<std::string, 3>walkMaxFallDamage { "Max fall damage percent",                "Maximaler Fallschaden %",                      "Максимальный урон от падения (%)" };
     std::array<std::string, 3>walkNodeSpacing   { "Node spacing",                           "Node Abstand",                                 "Расстояние между точками" };
@@ -302,7 +304,7 @@ struct Translate{
     std::array<std::string, 3>miscBhop          { "Bunnyhop",                               "Bunnyhop",                                     "Баннихоп" };
     std::array<std::string, 3>miscAutoaccept    { "Autoaccept",                             "Automatisch akzeptieren",                      "Автопринятие игры" };
     std::array<std::string, 3>miscStartMM       { "Start queue",                            "Starte Matchmaking",                           "Начать поиск" };
-    std::array<std::string, 3>miscImAddicted    { "I think I might be addicted to csgo",    "Ich glaube ich bin süchtig nach csgo...",      "Я зависим от кс" };
+    std::array<std::string, 3>miscImAddicted    { "I think I might be addicted to csgo...", "Ich glaube ich bin süchtig nach csgo...",      "Я зависим от кс..." };
     std::array<std::string, 3>miscLanguage      { "Language",                               "Sprache",                                      "Язык" };
     std::array<std::string, 3>miscLanguageEng   { "English",                                "Englisch",                                     "Английский" };
     std::array<std::string, 3>miscLanguageGer   { "German",                                 "Deutsche",                                     "Немецкий" };
@@ -994,20 +996,20 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos,csg
     csgo::Trace traceHBottom1, traceHBottom2, traceHBottomD1, traceHBottomD2,traceHMiddle1,traceHMiddle2,traceHMiddleD1,traceHMiddleD2, traceHTop1, traceHTop2, traceHTopD1, traceHTopD2,traceToParent;
     const csgo::EngineTrace Trace=engineInterfaces.engineTrace();
 
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottom1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius/2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius/2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottom2);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottomD1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottomD2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius/2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHBottom1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius/2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius/2,botzConfig.checkOrigin.z} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHBottom2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHBottomD1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHBottomD2);
 
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddle1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddle2);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddleD1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddleD2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHMiddle1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, (MASK_PLAYERSOLID & CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHMiddle2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHMiddleD1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHMiddleD2);
 
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop2);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHTop1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHTop2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHTopD1);
+    Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, (MASK_PLAYERSOLID&CONTENTS_WINDOW), localPlayer.get().getPOD(), traceHTopD2);
 
     Trace.traceRay({botzConfig.checkOrigin,parentpos}, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceToParent);
     if (traceToParent.contents != 0)
@@ -1368,7 +1370,8 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
         else {
             if (botzConfig.aimAtPath) {
                 botzConfig.startedAiming = memory.globalVars->realtime - botzConfig.reactionTime;
-                botzConfig.aimreason = 4;
+                if(botzConfig.aimreason==-1)
+                    botzConfig.aimreason = 4;
                 botzConfig.aimspot = { botzConfig.waypoints.back().x,botzConfig.waypoints.back().y,botzConfig.waypoints.back().z + 62.f };
             }
             //not in position yet, move closer/do other stuff while you're walking(todo)
@@ -1767,10 +1770,10 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             }
             if (botzConfig.walkbotType == 0) {
                 ImGui::Checkbox(translate.walkShouldWalk[miscConfig.language].c_str(), &botzConfig.shouldwalk);
-                ImGui::Checkbox("improved pathfinding", &botzConfig.improvedPathfinding);
+                ImGui::Checkbox(translate.walkImprovedPfind[miscConfig.language].c_str(), &botzConfig.improvedPathfinding);
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
-                    ImGui::Text("!!!!!!!Will get stuck on uneven ground!!!!!!!");
+                    ImGui::Text(translate.walkImprovedPWarn[miscConfig.language].c_str());
                     ImGui::EndTooltip();
                 }
                     
@@ -1873,8 +1876,6 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
 
         if (ImGui::Button(translate.miscImAddicted[miscConfig.language].c_str()))
             Misc::antiaddiction();
-        ImGui::Text(std::to_string(ImGui::GetMousePos().x - ImGui::GetWindowPos().x).c_str());
-        ImGui::Text(std::to_string(ImGui::GetMousePos().y - ImGui::GetWindowPos().y).c_str());
         ImGui::SetCursorPos(ImVec2(410, 319));
         if (ImGui::Button(translate.miscLanguage[miscConfig.language].c_str(), ImVec2(161.f, 20.f))) {
             miscConfig.langWindowOpen = true;
@@ -1885,8 +1886,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             if (ImGui::Button(translate.miscLanguageEng[miscConfig.language].c_str(),ImVec2(145.f,20.f)))
                 miscConfig.language = 0;
             if (ImGui::Button(translate.miscLanguageGer[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
-                miscConfig.matchmakingStartTime = memory.globalVars->realtime;
-                //miscConfig.language = 1;
+                miscConfig.language = 1;
             if (ImGui::Button(translate.miscLanguageRus[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
                 miscConfig.language = 2;
             if (!ImGui::IsWindowFocused())
