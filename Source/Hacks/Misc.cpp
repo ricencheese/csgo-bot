@@ -217,6 +217,7 @@ struct BotzConfig {
     int curWayPoint{ -2 };
     bool shouldGoTowardsPing{ false };
     bool traceToParentIntersects{ false };
+    std::vector<csgo::Vector>parentOffset;
 
         //walkbot type 1 (node pathfinding)
     std::vector<csgo::Vector> presetNodes;
@@ -1002,12 +1003,12 @@ int collisionCheck(const EngineInterfaces& engineInterfaces,csgo::Vector pos,csg
     Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHBottomD2);
 
     Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddle1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddle2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,  botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddle2);
     Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddleD1);
     Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+38.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHMiddleD2);
 
     Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop1);
-    Trace.traceRay({ {botzConfig.checkOrigin.x,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop2);
+    Trace.traceRay({ {botzConfig.checkOrigin.x,  botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTop2);
     Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD1);
     Trace.traceRay({ {botzConfig.checkOrigin.x + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f},{botzConfig.checkOrigin.x - botzConfig.nodeRadius / 2,botzConfig.checkOrigin.y + botzConfig.nodeRadius / 2,botzConfig.checkOrigin.z+42.f} }, MASK_PLAYERSOLID, localPlayer.get().getPOD(), traceHTopD2);
 
@@ -1150,9 +1151,13 @@ void Misc::addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept{
         botzConfig.nodesType.push_back(false);
         botzConfig.nodesParents.push_back(botzConfig.currentNode);
         botzConfig.walkType.push_back(collides);
+        botzConfig.parentOffset.push_back(offset);//unused right now, going to use it for optimization
                                     //uncomment  whenever a better "node-already-exists" detection is added, improves pathfinding 10000x
-        botzConfig.fcost.push_back((!botzConfig.improvedPathfinding?botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()):0.f) + botzConfig.nodes.back().distTo(botzConfig.finalDestination));
-
+        float fcost=(botzConfig.improvedPathfinding ? botzConfig.nodes.back().distTo(localPlayer.get().getAbsOrigin()) : 0.f) + botzConfig.nodes.back().distTo(botzConfig.finalDestination);
+        if (collides == 3)
+            fcost += botzConfig.nodeRadius;
+;        botzConfig.fcost.push_back(fcost);
+        
         if (botzConfig.nodes.back().distTo(botzConfig.finalDestination) < botzConfig.nodeRadius-1.f)
         {
             botzConfig.pathFound = true;
@@ -1390,6 +1395,18 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
 
 }
 
+void Misc::checkForEnemies(const EngineInterfaces& engineInterfaces) noexcept {
+    if (!localPlayer || !localPlayer.get().isAlive())
+        return;
+    const csgo::Engine& engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+    const csgo::EngineTrace& eTrace = engineInterfaces.engineTrace();
+
+    //for()
+}
+
+
 //node mesh schizo bs
 
 void Misc::addNewNode(const EngineInterfaces& engineInterfaces,csgo::Vector pingPos) noexcept {
@@ -1527,6 +1544,8 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
     eventName += "!";
     engine.clientCmdUnrestricted(eventName.c_str());                                                                       
     const auto localUserId = localPlayer.get().getUserId(engine);
+    const csgo::EngineTrace& eTrace = engineInterfaces.engineTrace();
+    csgo::Trace trace;
     std::string printToConsole;
     const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(engine.getPlayerForUserID(event.getInt("userid"))));
     switch(eventType){                                                                                                   
@@ -1560,31 +1579,12 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         Misc::handleRadioCommands(event, engineInterfaces);
         break;
     case 12:
-        
-        if (entity.getPOD() == localPlayer.get().getPOD())
-            return;
         if (!entity.isOtherEnemy(memory, localPlayer.get()))
             return;
         botzConfig.aimspot = entity.getBonePosition(4);
-        //csgo::PlayerInfo pinfo;
-        //engine.getPlayerInfo(engine.getPlayerForUserID(event.getInt("userid")), pinfo);
-        //printToConsole = "echo ";
-        //printToConsole += event.getString("weapon");
-        //printToConsole += " fired by ";
-        //printToConsole += pinfo.name;
-        //printToConsole += " at (";
-        //printToConsole += std::to_string(botzConfig.aimspot.x);
-        //printToConsole += ", ";
-        //printToConsole += std::to_string(botzConfig.aimspot.y);
-        //printToConsole += ", ";
-        //printToConsole += std::to_string(botzConfig.aimspot.z);
-        //printToConsole += ")";
-        //engine.clientCmdUnrestricted(printToConsole.c_str());
-        
-        if (entity.isVisible(engineInterfaces.engineTrace(), localPlayer.get().getEyePosition())) {
-            botzConfig.isShooterVisible = true;}
-        else {
-            botzConfig.isShooterVisible = false;}
+        eTrace.traceRay({ {botzConfig.aimspot.x,botzConfig.aimspot.y,botzConfig.aimspot.z+50.f},localPlayer.get().getEyePosition()}, MASK_OPAQUE, localPlayer.get().getPOD(), trace);
+        botzConfig.isShooterVisible = (trace.contents == 0);
+        engine.clientCmdUnrestricted(std::to_string(trace.contents).c_str());
 
         if (botzConfig.startedAiming + botzConfig.reactionTime < memory.globalVars->realtime) {
             botzConfig.startedAiming = memory.globalVars->realtime;
@@ -1595,6 +1595,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         if (botzConfig.walkbotType == 0) {
             if (!botzConfig.shouldGoTowardsPing)
                 return;
+            
             if (!entity.isOtherEnemy(memory, localPlayer.get())) {
                 botzConfig.playerPingLoc = { event.getFloat("x"),event.getFloat("y"),event.getFloat("z") };
                 botzConfig.finalDestination = botzConfig.playerPingLoc;

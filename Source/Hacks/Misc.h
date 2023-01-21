@@ -83,6 +83,7 @@ public:
         void reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event,bool forceReport = false) noexcept;
         void reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
         void gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
+        void checkForEnemies(const EngineInterfaces& engineInterfaces) noexcept;
 
         //node mesh shizzzzzzzz
         void addNewNode(const EngineInterfaces& engineInterfaces, csgo::Vector pingPos) noexcept;
