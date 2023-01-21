@@ -180,6 +180,7 @@ struct MiscConfig {
     float drawstartTime = 0;
     bool langWindowOpen{ false };
     bool walkbotTypeOpen{ false };
+    bool botListOpen{ false };
     int language = 0;
 } miscConfig;
 
@@ -265,6 +266,10 @@ struct BotzConfig {
 
     bool shouldCompliment{ true };
     float complimentChance{1.f};
+    
+    std::vector<int>botsList;
+    bool isListeningForCommands{ false };
+    std::vector<int>botsListeningToMe;
 
 } botzConfig;
 
@@ -313,6 +318,33 @@ struct Translate{
 
 
 }translate;
+
+struct Encrypted{
+    //used for encrypted userid transmit, emoticon index=userid
+    //bot says :^) in chat, another bot in the match translates this to userid 11
+    const std::array<std::string, 101>uid{   ":-)", ":)",   ":-]",  ":]",   ":->",  ":>",   "8-)",  "8)",   ":-}",  ":}",
+                                             ":o)", ":c)",  ":^)",  "=]",   "=)",   ":-D",  ":D",   "8-D",  "8D",   "=D",
+                                             "8^D", "c:",   "C:",   "x-D",  "xD",   "X-D",  "XD",   ":-))", ":-(",  ":(",
+                                             ":-c", ":c",   ":-<",  ":<",   ":-[",  ":[",   ":-|",  ":{",   ":@",   ";(",
+                                             ":'-(",":'(",  ":=(",  ":'-)", ":')",  ":'D",  ">:(",  ">:[",  "D-':", "D:<",
+                                             "D:",  "D8",   "D;",   "D=",   "DX",   ":-O",  ":O",   ":-o",  ":o",   ":-0",
+                                             ":0",  "8-0",  ">:O",  "=O",   "=o",   "=0",   ":-3",  ":3",   "=3",   "x3",
+                                             "X3",  ">:3",  ":-*",  ":*",   ":x",   ";-)",  ";)",   "*-)",  "*)",   ";-]",
+                                             ";]",  ";^)",  ";>",   ";-,",  ";D",   ";3",   ":-P",  ":P",   "X-P",  "XP",
+                                             "x-p", "xp",   ":-p",  ":p",   ":-b",  ":b",   "d:",   "=p",   ">:P",  ":-/",
+                                             ":/" };
+    //sicko to sicko communication phrases
+    const std::array<std::string, 8>phraseList{ ";^3?",";^3!",":0?",">:D!","D:<!",":B!",":V!",":l!"};
+    #define helloQuestion   0     
+    #define helloAnswer     1 
+    #define iAmListening    2 
+    #define yesOk           3 
+    #define noCantDoThat    4 
+    #define goB             5 
+    #define goA             6 
+    #define comeToMe        7
+
+}encrypted;
 
 template<typename T>
 void pop_front(std::vector<T>& vec)
@@ -782,9 +814,16 @@ void Misc::readChat(const void* data, int size) noexcept {
     const auto reader = ProtobufReader{ static_cast<const std::uint8_t*>(data),size };
     const auto ent_idx = reader.readInt32(1);
     const auto params = reader.readRepeatedString(4);
+    const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(ent_idx));
+
+    //if (entity.getPOD() == localPlayer.get().getPOD())
+     //   return;
+
+
     miscConfig.message = params[1];
     miscConfig.playeruid = ent_idx;
     miscConfig.messageLoggedAt = memory.globalVars->realtime;
+
 }
 
 void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& memory) noexcept{
@@ -796,6 +835,8 @@ void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& m
     ImDrawList* dlist;
     dlist = ImGui::GetBackgroundDrawList();
     if (miscConfig.message=="NULL"|| miscConfig.playeruid == -1 || miscConfig.messageLoggedAt == 0)
+        return;
+    if (std::find(encrypted.uid.begin(), encrypted.uid.end(), miscConfig.message) != encrypted.uid.end())
         return;
     const csgo::Engine& engine = engineInterfaces.getEngine();
     if (!engine.isInGame())
@@ -831,8 +872,50 @@ void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& m
 void Misc::chatBot(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept {
     if (!localPlayer)
         return;
+    const csgo::Engine& engine = engineInterfaces.getEngine();
+    if (!engine.isConnected())
+        return;
 
+    if (miscConfig.message == "NULL" || miscConfig.playeruid == -1 || miscConfig.messageLoggedAt == 0)
+        return;
+
+    if (std::find(encrypted.uid.begin(), encrypted.uid.end(), miscConfig.message) == encrypted.uid.end()&&
+        std::find(encrypted.phraseList.begin(),encrypted.phraseList.end(),miscConfig.message)==encrypted.phraseList.end())
+            return;
+    const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(miscConfig.playeruid));
+
+    std::string messageToSend="say \"";
+    if (miscConfig.message == encrypted.phraseList[helloQuestion]) {
+        botzConfig.botsList.clear();
+        botzConfig.botsList.push_back(entity.getUserId(engine));
+        messageToSend += encrypted.phraseList[helloAnswer];
+    }
+
+    if (miscConfig.message == encrypted.phraseList[helloAnswer]) {
+        botzConfig.botsList.push_back(entity.getUserId(engine));
+    }
+
+    if (miscConfig.message == encrypted.uid[localPlayer.get().getUserId(engine)]) {
+        messageToSend += encrypted.phraseList[iAmListening];
+        botzConfig.isListeningForCommands = true;
+    }
+
+    if (miscConfig.message == encrypted.phraseList[comeToMe]&&botzConfig.isListeningForCommands) {
+        if (entity.getNetworkable().isDormant())
+            messageToSend += encrypted.phraseList[noCantDoThat];
+        else {
+            messageToSend += encrypted.phraseList[yesOk];
+            botzConfig.finalDestination = entity.getAbsOrigin();
+            Misc::pathfind(engineInterfaces, memory);
+            botzConfig.isListeningForCommands = false;
+        }
+    }
+
+    messageToSend += "\"";
+    miscConfig.message = "NULL"; miscConfig.playeruid = -1; miscConfig.messageLoggedAt = 0;
+    engine.clientCmdUnrestricted(messageToSend.c_str());
 }
+
 void Misc::reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, bool forceReport) noexcept {
 
     if (!botzConfig.isbotzon || !botzConfig.shouldReportToTeam)
@@ -1395,6 +1478,7 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
 
 }
 
+//wip
 void Misc::checkForEnemies(const EngineInterfaces& engineInterfaces) noexcept {
     if (!localPlayer || !localPlayer.get().isAlive())
         return;
@@ -1403,7 +1487,7 @@ void Misc::checkForEnemies(const EngineInterfaces& engineInterfaces) noexcept {
         return;
     const csgo::EngineTrace& eTrace = engineInterfaces.engineTrace();
 
-    //for()
+    
 }
 
 
@@ -1541,13 +1625,16 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         return;                                                                                                          //6: player_radio      7: round_freeze_end 8: vote_cast
     const csgo::Engine& engine = engineInterfaces.getEngine();                                                           //9: round_mvp         10:item_purchase    11:bullet_impact
     std::string eventName = event.getName();                                                                             //12:weapon_fire       13:player_ping      14:player_connect
+    
     eventName += "!";
-    engine.clientCmdUnrestricted(eventName.c_str());                                                                       
+    //engine.clientCmdUnrestricted(eventName.c_str());
+
     const auto localUserId = localPlayer.get().getUserId(engine);
     const csgo::EngineTrace& eTrace = engineInterfaces.engineTrace();
     csgo::Trace trace;
     std::string printToConsole;
     const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(engine.getPlayerForUserID(event.getInt("userid"))));
+
     switch(eventType){                                                                                                   
     case 0:
         if (entity.isOtherEnemy(memory, localPlayer.get())) {
@@ -1570,6 +1657,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
             //camp
         }
         break;
+
     case 6:
         printToConsole = "echo User ";
         printToConsole += std::to_string(event.getInt("userid"));
@@ -1850,6 +1938,16 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
             ImGui::PopItemWidth();
         }
         ImGui::Separator();
+        ImGui::Checkbox("Aim at events", &botzConfig.aimAtEvents);
+        if (botzConfig.aimAtEvents) {
+            ImGui::Text("|");
+            ImGui::SameLine();
+            ImGui::PushItemWidth(200.f);
+            ImGui::SliderFloat("Reaction time", &botzConfig.reactionTime, 0.f, 1.f, "%.2f");
+            ImGui::Text("|");
+            ImGui::SameLine();
+            ImGui::SliderFloat("Aim time", &botzConfig.aimtime[0], -2.2f, 0.28f, "%.2f");
+        }
             break;
     case 2:break;
     case 3:
@@ -1873,7 +1971,8 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         }
         if (miscConfig.matchmakingStartTime + 1.7f < memory.globalVars->realtime)
             miscConfig.matchmakingStartTime = 0.f;
-            
+        if (ImGui::Button("Bot list"))
+            miscConfig.botListOpen = true;
 
         if (ImGui::Button(translate.miscImAddicted[miscConfig.language].c_str()))
             Misc::antiaddiction();
@@ -1899,45 +1998,9 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
 
     ImGui::EndChild();
 
-    //    if (ImGui::Button("Toggle botzzz"))
-    //        botzConfig.isbotzon = !botzConfig.isbotzon;
-    //    if (botzConfig.isbotzon) {
-    //        ImGui::Checkbox("Botz debug", &botzConfig.shouldDebug);
-    //        if (botzConfig.shouldDebug) {
-    //            if (ImGui::Button("find path"))
-    //                Misc::pathfind(engineInterfaces,memory);
-    //            if(botzConfig.nodes.size()>0)
-    //                ImGui::SliderInt("node # ", &botzConfig.currentNode, 0, botzConfig.nodes.size() - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
-    //            if (ImGui::Button("open neighbor nodes of node"))
-    //                openNode(engineInterfaces,botzConfig.currentNode);
-    //            ImGui::Separator();
-    //        }
-    //        //ImGui::SliderFloat("Waypoint approximation amount", &botzConfig.nodeRadius, 1.f, 150.f);
-    //        ImGui::Checkbox("Should walk towards pos", &botzConfig.shouldwalk);
-    //        ImGui::Separator();
-    //        ImGui::Text("Pathfinding");
-    //        ImGui::SliderFloat("Max fall damage (%)", &botzConfig.dropdownDmg, 0.0f, 1.0f,"%.2f",ImGuiSliderFlags_AlwaysClamp);
-    //        ImGui::SliderInt("Node radius", &botzConfig.nodeRadius, 1, 150);
-    //        ImGui::Checkbox("Pathfinding debug", &botzConfig.pathfindingDebug);
-    //        ImGui::Checkbox("Draw pathfinding traces", &botzConfig.drawPathfindingTraces);
-    //        ImGui::Checkbox("Draw circles", &botzConfig.circlesOrCost);
-    //        ImGui::Separator();
-    //        ImGui::Text("Bot behavior");
-    //        ImGui::Checkbox("Autoreload", &botzConfig.autoreload);
-    //        if (botzConfig.autoreload) {
-    //            ImGui::SliderInt("Reload after X seconds of not seeing an enemy: ", &botzConfig.reloadAfterXSeconds, 0, 30);
-    //            ImGui::SliderFloat("Reload if clip is below x%", &botzConfig.reloadIfClipPercent, 0.01f, 0.99f, "%.2f");
-    //            ImGui::Checkbox("Quickswitch weapon after reload", &miscConfig.quickReload);
-    //        }
-    //        ImGui::Checkbox("Report info to team", &botzConfig.shouldReportToTeam);
-    //        if (botzConfig.shouldReportToTeam) {
-    //            ImGui::Checkbox("Report death position", &botzConfig.reportDetailsCallout);
-    //            ImGui::Checkbox("Report killer's name&weapon", &botzConfig.reportDetailsDiedTo);
-    //        }
-    //        ImGui::Separator();
     //        ImGui::Text("Aiming");
     //        ImGui::SliderFloat("Reaction time", &botzConfig.reactionTime, 0.f, 1.f,"%.2f");
-    //        ImGui::SliderFloat("aimtime", &botzConfig.aimtime[0], -2.2f, 0.28f, "%.2f");
+    //        ImGui::SliderFloat("Aim time", &botzConfig.aimtime[0], -2.2f, 0.28f, "%.2f");
     //        ImGui::Separator();
     //        ImGui::Text("Communication");
     //        ImGui::SliderFloat("Compliment chance", &botzConfig.complimentChance, 1.f, 100.f,"%.0f",ImGuiSliderFlags_AlwaysClamp);
@@ -1965,6 +2028,56 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
     ImGui::Columns(1);
     if (!contentOnly)
         ImGui::End();
+
+    if (miscConfig.botListOpen) {
+        ImGui::Begin("bot list", &miscConfig.botListOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+        if (ImGui::Button("Check for bots")) {
+            botzConfig.botsList.clear();
+            engineInterfaces.getEngine().clientCmdUnrestricted("say \";^3?\"");
+        }
+        ImGui::Text("Your encrypted userid: ");
+        ImGui::SameLine();
+        if(localPlayer)
+            ImGui::Text(encrypted.uid[localPlayer.get().getUserId(engineInterfaces.getEngine())].c_str());
+
+        ImGui::Text("Bots list:");
+        ImGui::Separator();
+        const csgo::Engine& engine = engineInterfaces.getEngine();
+        std::string message = "say ";
+        if(localPlayer&&engineInterfaces.getEngine().isInGame())
+            for (uint32_t index = 0; index < botzConfig.botsList.size(); index++) {
+                csgo::PlayerInfo pInfo;
+                engine.getPlayerInfo(engine.getPlayerForUserID(botzConfig.botsList[index]), pInfo);
+
+                ImGui::Text(pInfo.name);
+                ImGui::SameLine();
+                ImGui::Text(std::to_string(pInfo.userId).c_str());
+                ImGui::SameLine();
+                ImGui::Text(encrypted.uid[pInfo.userId].c_str());
+                ImGui::SameLine();
+                ImGui::Button("Ask to listen");
+                if (ImGui::IsItemClicked()) {
+                    message += encrypted.uid[pInfo.userId];
+                    engineInterfaces.getEngine().clientCmdUnrestricted(message.c_str());
+                    botzConfig.botsListeningToMe.push_back(pInfo.userId);
+                    botzConfig.botsListeningToMe.push_back(-1); //padding for std::find
+                }
+                if (std::find(botzConfig.botsListeningToMe.begin(), botzConfig.botsListeningToMe.end(), pInfo.userId) != botzConfig.botsListeningToMe.end()) {
+                    ImGui::SameLine();
+                    ImGui::Button("Ask to come to you");
+                    if (ImGui::IsItemClicked()) {
+                        message += encrypted.phraseList[comeToMe];
+                        engineInterfaces.getEngine().clientCmdUnrestricted(message.c_str());
+                        botzConfig.botsListeningToMe.erase(std::find(botzConfig.botsListeningToMe.begin(), botzConfig.botsListeningToMe.end(), pInfo.userId) + 1);
+                        botzConfig.botsListeningToMe.erase(std::find(botzConfig.botsListeningToMe.begin(), botzConfig.botsListeningToMe.end(), pInfo.userId));
+                    }
+                }
+                ImGui::Separator();
+                    
+            }
+        ImGui::End();
+    }
+
 }
 
 static void from_json(const json& j, ImVec2& v)

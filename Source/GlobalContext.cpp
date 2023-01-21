@@ -88,12 +88,12 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     features->misc.findBreakable(getEngineInterfaces(),cmd);
     features->misc.reload(cmd, *memory, getEngineInterfaces());
     features->misc.findPath(getEngineInterfaces());
-
+    features->misc.chatBot(getEngineInterfaces(), *memory);
 
     EnginePrediction::run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, *memory, cmd);
 
-    features->aimbot.run(features->misc, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *config, *memory, cmd);
-    Triggerbot::run(getEngineInterfaces().engineTrace(), getOtherInterfaces(), *memory, *config, cmd);
+    //features->aimbot.run(features->misc, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *config, *memory, cmd);
+    //Triggerbot::run(getEngineInterfaces().engineTrace(), getOtherInterfaces(), *memory, *config, cmd);
 
     auto viewAnglesDelta{ cmd->viewangles - previousViewAngles };
     viewAnglesDelta.normalize();
@@ -158,22 +158,6 @@ void GlobalContext::frameStageNotifyHook(csgo::FrameStage stage)
 
     if (stage == csgo::FrameStage::START)
         GameData::update(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getEngineInterfaces(), getOtherInterfaces(), *memory);
-
-    if (stage == csgo::FrameStage::RENDER_START) {
-        features->visuals.colorWorld();
-        features->visuals.updateEventListeners();
-    }
-    if (getEngineInterfaces().getEngine().isInGame()) {
-        features->visuals.skybox(stage);
-        features->visuals.removeBlur(stage);
-        features->visuals.removeGrass(stage);
-        features->visuals.modifySmoke(stage);
-        features->visuals.disablePostProcessing(stage);
-        features->visuals.removeVisualRecoil(stage);
-        features->visuals.applyZoom(stage);
-        features->backtrack.update(getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, stage);
-    }
-    features->inventoryChanger.run(getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, stage);
 
     hooks->client.callOriginal<void, 37>(stage);
 }
