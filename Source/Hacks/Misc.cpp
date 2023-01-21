@@ -274,47 +274,55 @@ struct BotzConfig {
 } botzConfig;
 
 struct Translate{
-    std::array<std::string, 3>tabWalkbot        { "WALKBOT",                                "WALKBOT",                                      "WALKBOT"};
-    std::array<std::string, 3>tabEvents         { "EVENTS",                                 "EREIGNISSE",                                   "EVENTS"};
-    std::array<std::string, 3>tabChat           { "CHAT",                                   "CHAT",                                         "CHAT"};
-    std::array<std::string, 3>tabMisc           { "MISC",                                   "VERSCHIEDENES",                                "MISC"};
-
-
-    std::array<std::string, 3>walkToggleBot     { "Toggle bot",                             "Toggle bot",                                   "Включить бота"                     };
-    std::array<std::string, 3>walkAutoPath      { "Automatic pathfinding",                  "Automatischer Wegfinder",                      "Автоматическое нахождение маршрута" };
-    std::array<std::string, 3>walkPresetNodes   { "Pre-set nodes",                          "Voreingestellte Nodes",                        "Навмеш" };
-    std::array<std::string, 3>walkShouldWalk    { "Should walk towards pos",                "In Richtung Position gehen",                   "Идти до позиции" };
-    std::array<std::string, 3>walkGotoPings     { "Go towards teammate\'s pings",           "Gehe zu Markierungen von Teammates",           "Идти до пингов тиммейтов" };
-    std::array<std::string, 3>walkImprovedPfind { "Improved pathfinding",                   "Verbesserte Wegfindung",                       "Улучшенный патхфайндинг" };
-    std::array<std::string, 3>walkImprovedPWarn { "Will get stuck on uneven ground!!!",     "Wird auf unebenem Untergrund stecken bleiben!","Застревает на неровной поверхности!" };
-    std::array<std::string, 3>walkAimAtPath     { "Aim at path",                            "Sollte auf den Weg zielen",                    "Нацеливаться на путь" };
-    std::array<std::string, 3>walkMaxFallDamage { "Max fall damage percent",                "Maximaler Fallschaden %",                      "Максимальный урон от падения (%)" };
-    std::array<std::string, 3>walkNodeSpacing   { "Node spacing",                           "Node Abstand",                                 "Расстояние между точками" };
-    std::array<std::string, 3>walkDrawNodes     { "Draw nodes",                             "Zeichne Nodes",                                "Прорисовка точек" };
-    std::array<std::string, 3>walkDebugFeatures { "Debug features",                         "Debug Features",                               "Дебаг-функции" };
-    std::array<std::string, 3>walkDrawDebugInfo { "Draw debug information",                 "Zeige Debug-Informationen",                    "Прорисовка дебаг-информации" };
-    std::array<std::string, 3>walkDrawTraces    { "Draw collision check traces",            "Zeige Kollision Prüfe Spuren",                 "Прорисовка коллижн-трейсов" };
-    std::array<std::string, 3>walkForceResetPos { "Force reset local pos",                  "Erzwinge den reset der lokalen Position",      "Сбросить локальную позицию" };
+    std::array<std::string, 4>tabWalkbot        { "WALKBOT",                                "WALKBOT",                                      "WALKBOT",                                       "WALKBOT"};
+    std::array<std::string, 4>tabEvents         { "EVENTS",                                 "EREIGNISSE",                                   "EVENTS",                                        "VERANSTALTUNGEN"};
+    std::array<std::string, 4>tabChat           { "CHAT",                                   "CHAT",                                         "CHAT",                                          "PLAUDERN"};
+    std::array<std::string, 4>tabMisc           { "MISC",                                   "VERSCHIEDENES",                                "MISC",                                          "MISC" };
                             
-    std::array<std::string, 3>eventsAutoreload  { "Autoreload",                             "Auto-nachladen",                               "Автоматическая перезарядка" };
-    std::array<std::string, 3>eventsReloadTime  { "Reload after X seconds",                 "Nachladen nach X Sekunden",                    "Перезаряжаться через Х секунд" };
-    std::array<std::string, 3>eventsReloadClip  { "Reload if clip is below x%",             "Nachladen wenn Magazin unter X% ist",          "Перезаряжаться если в магазине <X патронов" };
-    std::array<std::string, 3>eventsReportDeath { "Report death info",                      "Zeige Todesinfo an",                           "Сообщать информацию о смерти" };
-    std::array<std::string, 3>eventsReportPos   { "Report death callout",                   "Zeige Todesort an",                            "Сообщать позицию смерти" };
-    std::array<std::string, 3>eventsReportKiller{ "Report killer info",                     "Zeige Name und Waffe des Killers",             "Сообщать информацию об убийце" };
-    std::array<std::string, 3>eventsCompliment  { "Compliment teammates on kill",           "Komplimentiere Teammates bei kill",            "Хвалить тиммейтов за киллы" };
-    std::array<std::string, 3>eventsComplimentPC{ "Compliment chance",                      "Komplimentiere Chance",                        "Шанс похвалы" };
                             
-    std::array<std::string, 3>miscOverheadChat  { "Overhead chat",                          "Overhead chat",                                "Чат над головой" };
-    std::array<std::string, 3>miscMenuKey       { "Menu key",                               "Menütaste",                                    "Кнопка меню" };
-    std::array<std::string, 3>miscBhop          { "Bunnyhop",                               "Bunnyhop",                                     "Баннихоп" };
-    std::array<std::string, 3>miscAutoaccept    { "Autoaccept",                             "Automatisch akzeptieren",                      "Автопринятие игры" };
-    std::array<std::string, 3>miscStartMM       { "Start queue",                            "Starte Matchmaking",                           "Начать поиск" };
-    std::array<std::string, 3>miscImAddicted    { "I think I might be addicted to csgo...", "Ich glaube ich bin süchtig nach csgo...",      "Я зависим от кс..." };
-    std::array<std::string, 3>miscLanguage      { "Language",                               "Sprache",                                      "Язык" };
-    std::array<std::string, 3>miscLanguageEng   { "English",                                "Englisch",                                     "Английский" };
-    std::array<std::string, 3>miscLanguageGer   { "German",                                 "Deutsche",                                     "Немецкий" };
-    std::array<std::string, 3>miscLanguageRus   { "Russian",                                "Russische",                                    "Русский" };
+    std::array<std::string, 4>walkToggleBot     { "Toggle bot",                             "Toggle bot",                                   "Включить бота",                                 "Bot umschalten"};
+    std::array<std::string, 4>walkAutoPath      { "Automatic pathfinding",                  "Automatischer Wegfinder",                      "Автоматическое нахождение маршрута",            "Automatische Wegfindung" };
+    std::array<std::string, 4>walkPresetNodes   { "Pre-set nodes",                          "Voreingestellte Nodes",                        "Навмеш",                                        "Voreingestellte Knoten" };
+    std::array<std::string, 4>walkShouldWalk    { "Should walk towards pos",                "In Richtung Position gehen",                   "Идти до позиции",                               "Sollte in Richtung pos gehen" };
+    std::array<std::string, 4>walkGotoPings     { "Go towards teammate\'s pings",           "Gehe zu Markierungen von Teammates",           "Идти до пингов тиммейтов",                      "Gehen Sie zu den Pings Ihres Teamkollegen" };
+    std::array<std::string, 4>walkImprovedPfind { "Improved pathfinding",                   "Verbesserte Wegfindung",                       "Улучшенный патхфайндинг",                       "Verbesserte Wegfindung" };
+    std::array<std::string, 4>walkImprovedPWarn { "Will get stuck on uneven ground!!!",     "Wird auf unebenem Untergrund stecken bleiben!","Застревает на неровной поверхности!",           "Wird auf unebenem Untergrund stecken bleiben!!!" };
+    std::array<std::string, 4>walkAimAtPath     { "Aim at path",                            "Sollte auf den Weg zielen",                    "Нацеливаться на путь",                          "Pfad anpeilen"};
+    std::array<std::string, 4>walkMaxFallDamage { "Max fall damage percent",                "Maximaler Fallschaden %",                      "Максимальный урон от падения (%)",              "Maximaler Sturzschaden in Prozent" };
+    std::array<std::string, 4>walkNodeSpacing   { "Node spacing",                           "Node Abstand",                                 "Расстояние между точками",                      "Knotenabstand"};
+    std::array<std::string, 4>walkDrawNodes     { "Draw nodes",                             "Zeichne Nodes",                                "Прорисовка точек",                              "Knoten zeichnen" };
+    std::array<std::string, 4>walkDebugFeatures { "Debug features",                         "Debug Features",                               "Дебаг-функции",                                 "Debug-Funktionen" };
+    std::array<std::string, 4>walkDrawDebugInfo { "Draw debug information",                 "Zeige Debug-Informationen",                    "Прорисовка дебаг-информации",                   "Zeichne Debug-Informationen" };
+    std::array<std::string, 4>walkDrawTraces    { "Draw collision check traces",            "Zeige Kollision Prüfe Spuren",                 "Прорисовка коллижн-трейсов",                    "Zeichnen Sie Kollisionskontrollspuren" };
+    std::array<std::string, 4>walkForceResetPos { "Force reset local pos",                  "Erzwinge den reset der lokalen Position",      "Сбросить локальную позицию",                    "Zurücksetzen lokaler Position erzwingen" };
+                            
+    std::array<std::string, 4>eventsAutoreload  { "Autoreload",                             "Auto-nachladen",                               "Автоматическая перезарядка",                    "Automatisch neu laden" };
+    std::array<std::string, 4>eventsReloadTime  { "Reload after X seconds",                 "Nachladen nach X Sekunden",                    "Перезаряжаться через Х секунд",                 "Nach X Sekunden neu laden" };
+    std::array<std::string, 4>eventsReloadClip  { "Reload if clip is below x%",             "Nachladen wenn Magazin unter X% ist",          "Перезаряжаться если в магазине <X патронов",    "Neu laden, wenn der Clip unter x % liegt" };
+    std::array<std::string, 4>eventsReportDeath { "Report death info",                      "Zeige Todesinfo an",                           "Сообщать информацию о смерти",                  "Todesfall melden" };
+    std::array<std::string, 4>eventsReportPos   { "Report death callout",                   "Zeige Todesort an",                            "Сообщать позицию смерти",                       "Todesruf melden" };
+    std::array<std::string, 4>eventsReportKiller{ "Report killer info",                     "Zeige Name und Waffe des Killers",             "Сообщать информацию об убийце",                 "Mörderinfo melden" };
+    std::array<std::string, 4>eventsCompliment  { "Compliment teammates on kill",           "Komplimentiere Teammates bei kill",            "Хвалить тиммейтов за киллы",                    "Machen Sie Teamkollegen Komplimente, wenn sie getötet wurden" };
+    std::array<std::string, 4>eventsComplimentPC{ "Compliment chance",                      "Komplimentiere Chance",                        "Шанс похвалы",                                  "Kompliment Chance" };
+                            
+    std::array<std::string, 4>miscOverheadChat  { "Overhead chat",                          "Overhead chat",                                "Чат над головой",                               "Overhead-Chat" };
+    std::array<std::string, 4>miscMenuKey       { "Menu key",                               "Menütaste",                                    "Кнопка меню",                                   "Menu key" };
+    std::array<std::string, 4>miscBhop          { "Bunnyhop",                               "Bunnyhop",                                     "Баннихоп",                                      "Hasenhop" };
+    std::array<std::string, 4>miscAutoaccept    { "Autoaccept",                             "Automatisch akzeptieren",                      "Автопринятие игры",                             "Automatisch akzeptieren" };
+    std::array<std::string, 4>miscStartMM       { "Start queue",                            "Starte Matchmaking",                           "Начать поиск",                                  "Warteschlange starten" };
+    std::array<std::string, 4>miscImAddicted    { "I think I might be addicted to csgo...", "Ich glaube ich bin süchtig nach csgo...",      "Я зависим от кс...",                            "Ich glaube, ich könnte csgo-süchtig sein ..."};
+    std::array<std::string, 4>miscLanguage      { "Language",                               "Sprache",                                      "Язык",                                          "Sprache" };
+    std::array<std::string, 4>miscLanguageEng   { "English",                                "Englisch",                                     "Английский",                                    "Englisch" };
+    std::array<std::string, 4>miscLanguageGer   { "German",                                 "Deutsche",                                     "Немецкий",                                      "Deutsch" };
+    std::array<std::string, 4>miscLanguageRus   { "Russian",                                "Russische",                                    "Русский",                                       "Russisch" };
+    std::array<std::string, 4>miscLanguageAus   { "Austrian",                               "österreichisch",                               "Австрийский",                                   "österreichisch" };
+    std::array<std::string, 4>miscBotsList      { "Bots list",                              "Bots-Liste",                                   "Список ботов",                                  "Bots-Liste"};
+                            
+    std::array<std::string, 4>blistCheckForBots { "Check for bots",                         "Suchen Sie nach Bots",                         "Обновить список боотв",                         "Suchen Sie nach Bots" };
+    std::array<std::string, 4>blistYourEncUid   { "Your encrypted userid: ",                "Ihre verschlüsselte userid: ",                 "Ваш зашифрованный userid: ",                    "Ihre verschlüsselte userid: " };
+    std::array<std::string, 4>blistAskToListen  { "Ask to listen",                          "Bitten Sie den Bot, zuzuhören",                "Попросить бота ждать команды",                  "Bitten Sie den Bot, zuzuhören" };
+    std::array<std::string, 4>blistAskToCome    { "Ask to come to you",                     "Bitten Sie den Bot, zu Ihnen zu kommen",       "Попросить бота идти к вам",                     "Bitten Sie den Bot, zu Ihnen zu kommen"};
+
 
 
 }translate;
@@ -1960,7 +1968,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         if (ImGui::Button("test"))
             Misc::autoqueue();
         if(!engineInterfaces.getEngine().isInGame())
-            if (ImGui::Button("Start mm")) {
+            if (ImGui::Button(translate.miscStartMM[miscConfig.language].c_str())) {
                 //csgo::UIEngine::from(retSpoofGadgets->client, interfaces.getPanoramaUIEngine().accessUIEngine()).RunScript(Misc::GetRoot(engineInterfaces.getEngine().isInGame()), "LobbyAPI.LaunchTrainingMap()", "panorama/layout/base.xml", 8, 10, false);
                 miscConfig.matchmakingStartTime = memory.globalVars->realtime;
             }
@@ -1971,7 +1979,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         }
         if (miscConfig.matchmakingStartTime + 1.7f < memory.globalVars->realtime)
             miscConfig.matchmakingStartTime = 0.f;
-        if (ImGui::Button("Bot list"))
+        if (ImGui::Button(translate.miscBotsList[miscConfig.language].c_str()))
             miscConfig.botListOpen = true;
 
         if (ImGui::Button(translate.miscImAddicted[miscConfig.language].c_str()))
@@ -1989,6 +1997,8 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 miscConfig.language = 1;
             if (ImGui::Button(translate.miscLanguageRus[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
                 miscConfig.language = 2;
+            if (ImGui::Button(translate.miscLanguageAus[miscConfig.language].c_str(), ImVec2(145.f, 20.f)))
+                miscConfig.language = 3;
             if (!ImGui::IsWindowFocused())
                 miscConfig.langWindowOpen = false;
             ImGui::End();
@@ -1998,49 +2008,22 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
 
     ImGui::EndChild();
 
-    //        ImGui::Text("Aiming");
-    //        ImGui::SliderFloat("Reaction time", &botzConfig.reactionTime, 0.f, 1.f,"%.2f");
-    //        ImGui::SliderFloat("Aim time", &botzConfig.aimtime[0], -2.2f, 0.28f, "%.2f");
-    //        ImGui::Separator();
-    //        ImGui::Text("Communication");
-    //        ImGui::SliderFloat("Compliment chance", &botzConfig.complimentChance, 1.f, 100.f,"%.0f",ImGuiSliderFlags_AlwaysClamp);
-    //        if (botzConfig.shouldwalk) {
-    //            ImGui::SliderFloat("X",&botzConfig.finalDestination.x, -5000.f, 5000.f);
-    //            ImGui::SliderFloat("Y",&botzConfig.finalDestination.y, -5000.f, 5000.f);
-    //            ImGui::SliderFloat("Z",&botzConfig.finalDestination.z, -5000.f, 5000.f);
-    //        }
-    //    }
-    //}
-    //else
-    //{
-    //    if (ImGui::Button("switch to botz"))
-    //        miscConfig.menutodraw = false;
-    //    ImGui::SameLine();
-    //    ImGui::hotkey("Menu Key", miscConfig.menuKey);
-    //    ImGui::Checkbox("overhead chat", &miscConfig.overheadChat);
-    //    ImGui::Checkbox("Bunny hop", &miscConfig.bunnyHop);
-    //    ImGui::Checkbox("Auto accept", &miscConfig.autoAccept);
-
-    //    if (ImGui::Button("Unhook"))
-    //        hooks->uninstall(*this, glow, engineInterfaces, clientInterfaces, interfaces, memory, visuals, inventoryChanger);
-    //}
-    
     ImGui::Columns(1);
     if (!contentOnly)
         ImGui::End();
 
     if (miscConfig.botListOpen) {
-        ImGui::Begin("bot list", &miscConfig.botListOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
-        if (ImGui::Button("Check for bots")) {
+        ImGui::Begin("bot list", &miscConfig.botListOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize |ImGuiWindowFlags_NoTitleBar);
+        if (ImGui::Button(translate.blistCheckForBots[miscConfig.language].c_str())) {
             botzConfig.botsList.clear();
             engineInterfaces.getEngine().clientCmdUnrestricted("say \";^3?\"");
         }
-        ImGui::Text("Your encrypted userid: ");
+        ImGui::Text(translate.blistYourEncUid[miscConfig.language].c_str());
         ImGui::SameLine();
         if(localPlayer)
             ImGui::Text(encrypted.uid[localPlayer.get().getUserId(engineInterfaces.getEngine())].c_str());
 
-        ImGui::Text("Bots list:");
+        ImGui::Text(translate.miscBotsList[miscConfig.language].c_str()+':');
         ImGui::Separator();
         const csgo::Engine& engine = engineInterfaces.getEngine();
         std::string message = "say ";
@@ -2055,7 +2038,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 ImGui::SameLine();
                 ImGui::Text(encrypted.uid[pInfo.userId].c_str());
                 ImGui::SameLine();
-                ImGui::Button("Ask to listen");
+                ImGui::Button(translate.blistAskToListen[miscConfig.language].c_str());
                 if (ImGui::IsItemClicked()) {
                     message += encrypted.uid[pInfo.userId];
                     engineInterfaces.getEngine().clientCmdUnrestricted(message.c_str());
@@ -2064,7 +2047,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 }
                 if (std::find(botzConfig.botsListeningToMe.begin(), botzConfig.botsListeningToMe.end(), pInfo.userId) != botzConfig.botsListeningToMe.end()) {
                     ImGui::SameLine();
-                    ImGui::Button("Ask to come to you");
+                    ImGui::Button(translate.blistAskToCome[miscConfig.language].c_str());
                     if (ImGui::IsItemClicked()) {
                         message += encrypted.phraseList[comeToMe];
                         engineInterfaces.getEngine().clientCmdUnrestricted(message.c_str());
