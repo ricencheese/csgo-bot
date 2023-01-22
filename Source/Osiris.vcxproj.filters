@@ -99,6 +99,9 @@
     <Filter Include="MemorySearch">
       <UniqueIdentifier>{a463f11e-5e7b-40b4-b955-c60208980d86}</UniqueIdentifier>
     </Filter>
+    <Filter Include="json">
+      <UniqueIdentifier>{c58b52da-61d2-439e-be3f-5881392ea8ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GUI.cpp">
@@ -347,6 +350,9 @@
     <ClCompile Include="MemorySearch\PatternFinderSIMD.cpp">
       <Filter>MemorySearch</Filter>
     </ClCompile>
+    <ClCompile Include="json\jsoncpp.cpp">
+      <Filter>json</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GUI.h">
@@ -489,9 +495,6 @@
     </ClInclude>
     <ClInclude Include="..\Dependencies\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Dependencies\nlohmann\json.hpp">
-      <Filter>nlohmann</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\MinHook\buffer.h">
       <Filter>MinHook</Filter>
@@ -1059,6 +1062,15 @@
     </ClInclude>
     <ClInclude Include="CSGO\Constants\GameEventNames.h">
       <Filter>CSGO\Constants</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\nlohmann\json.hpp">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json-forwards.h">
+      <Filter>json</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

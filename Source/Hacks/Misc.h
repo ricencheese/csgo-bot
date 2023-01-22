@@ -10,6 +10,9 @@
 #include <CSGO/Functions.h>
 #include "../CSGO/Panorama.h"
 
+#include "json.h"
+#include <shlwapi.h>
+
 namespace csgo { enum class FrameStage; }
 namespace csgo { enum class UserMessageType; }
 
@@ -19,6 +22,8 @@ class EngineInterfaces;
 class Glow;
 class Visuals;
 struct DemoPlaybackParameters;
+
+typedef Json::Value json_t;
 
 class Misc {
 public:
@@ -88,6 +93,7 @@ public:
         //node mesh shizzzzzzzz
         void addNewNode(const EngineInterfaces& engineInterfaces, csgo::Vector pingPos) noexcept;
         void drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept;
+        void savePresetNodes() noexcept;
         void getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept;
 
         void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept;

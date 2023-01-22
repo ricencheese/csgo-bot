@@ -150,6 +150,7 @@
     <ClCompile Include="InventoryChanger\ItemGenerator\ItemGenerator.cpp" />
     <ClCompile Include="InventoryChanger\ItemGenerator\TournamentMatches.cpp" />
     <ClCompile Include="InventoryChanger\WeaponNames.cpp" />
+    <ClCompile Include="json\jsoncpp.cpp" />
     <ClCompile Include="MemorySearch\HybridPatternFinder.cpp" />
     <ClCompile Include="MemorySearch\PatternFinder.cpp" />
     <ClCompile Include="MemorySearch\PatternFinderScalar.cpp" />
@@ -375,6 +376,8 @@
     <ClInclude Include="InventoryChanger\ItemId.h" />
     <ClInclude Include="InventoryChanger\WeaponNames.h" />
     <ClInclude Include="JsonForward.h" />
+    <ClInclude Include="json\json-forwards.h" />
+    <ClInclude Include="json\json.h" />
     <ClInclude Include="MemorySearch\HybridPatternFinder.h" />
     <ClInclude Include="MemorySearch\PatternFinder.h" />
     <ClInclude Include="MemorySearch\PatternFinderScalar.h" />
@@ -437,14 +440,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
@@ -468,7 +471,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
-    <IncludePath>$(SolutionDir)Dependencies\freetype;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Dependencies\range-v3;$(SolutionDir)Dependencies;$(ProjectDir)</IncludePath>
+    <IncludePath>$(SolutionDir)\Source\json;$(SolutionDir)Dependencies\freetype;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Dependencies\range-v3;$(SolutionDir)Dependencies;$(ProjectDir)</IncludePath>
+    <LibraryPath>$(SolutionDir)\Source\json;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

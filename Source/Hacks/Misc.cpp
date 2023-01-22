@@ -62,6 +62,9 @@
 #include "../imguiCustom.h"
 #include <Interfaces/ClientInterfaces.h>
 
+
+
+
 struct PreserveKillfeed {
     bool enabled = false;
     bool onlyHeadshots = false;
@@ -1592,6 +1595,83 @@ void Misc::drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept {
 
 }
 
+#include <windows.h>
+#include <shlobj.h>
+#include <filesystem>
+#include <string>
+#include <codecvt>
+
+void Misc::savePresetNodes() noexcept {
+    json_t PresetNodes;
+
+    auto& json = PresetNodes["BotNodes"];
+    json["Mapname"] = botzConfig.currentMap.c_str();
+
+    auto& nodes = json["Nodes"];
+    for (uint32_t index = 0; index < botzConfig.presetNodes.size(); index++) {
+        auto& node = nodes[std::to_string(index)];
+        node["nodeGroup"] = botzConfig.nodeGroup[index];
+        node["X"] = botzConfig.presetNodes[index].x;
+        node["Y"] = botzConfig.presetNodes[index].y;
+        node["Z"] = botzConfig.presetNodes[index].z;
+    }
+
+   /* json_t configuration;
+
+    auto& json = configuration["config"];*/
+    
+    //static TCHAR path[256];
+    //std::string folder, file;
+
+    //if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, 0, path)))
+    //{
+    //    folder = std::string(path) + ("\\Osiris\\PresetNodes\\");
+    //    file = std::string(path) + ("\\Osiris\\PresetNodes\\" + botzConfig.currentMap.c_str();
+    //}
+
+    //char path[MAX_PATH];
+    
+    TCHAR path[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        std::string folderPath = converter.to_bytes(path) + "\\Osiris";
+        std::filesystem::create_directory(folderPath);
+        std::filesystem::create_directory(folderPath + "\\PresetNodes");
+
+        std::ofstream file_out(folderPath + "\\PresetNodes" + "\\" + botzConfig.currentMap.c_str() + ".json");
+            if (file_out.good())
+                file_out << PresetNodes;
+            file_out.close();
+
+    }
+
+
+    //if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, 0, path)))
+    //{
+    //    PathAppend(path, TEXT("\\Osiris\\PresetNodes\\"));
+    //    if (SHCreateDirectoryEx(NULL, path, NULL) != ERROR_SUCCESS)
+    //    {
+    //        //ТУТ АУТПУТ ОБ ОШИБКЕ ПО ИДЕЕ
+    //    }
+    //}
+    //else
+    //{
+    //    //ТУТ АУТПУТ ОБ ОШИБКЕ ПО ИДЕЕ
+    //}
+
+
+    
+    //CreateDirectory(folder.c_str(), NULL);
+    //std::ofstream file_out(file);
+    ///*	string decrypted = configuration.toStyledString();
+    //    ByteArray txt(decrypted.begin(), decrypted.end()), enc;
+    //    Aes256::encrypt(encryption_key, txt, enc)*/;
+    //    if (file_out.good())
+    //        file_out << PresetNodes/*string(enc.begin(), enc.end())*/;
+    //    file_out.close();
+
+}
+
 void Misc::getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept {
     const csgo::Engine& engine=engineInterfaces.getEngine();
     botzConfig.currentMap = engine.getLevelName();
@@ -1908,6 +1988,8 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 ImGui::Text(botzConfig.currentMap.c_str());
                 if(ImGui::Button("Update map name"))
                     Misc::getMapNameOnce(engineInterfaces);
+                if (ImGui::Button("Save Nodes"))
+                    Misc::savePresetNodes();
                 std::string mapInList="Is the map in list: ";
                 mapInList += (std::find(botzConfig.maplist.begin(), botzConfig.maplist.end(), botzConfig.currentMap) != botzConfig.maplist.end() ? "yes" : "no");
                 ImGui::Text(mapInList.c_str());
