@@ -94,6 +94,7 @@ public:
         void addNewNode(const EngineInterfaces& engineInterfaces, csgo::Vector pingPos) noexcept;
         void drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept;
         void savePresetNodes() noexcept;
+        void readPresetNodes() noexcept;
         void getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept;
 
         void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept;
