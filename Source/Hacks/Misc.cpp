@@ -1617,6 +1617,16 @@ void Misc::savePresetNodes() noexcept {
         node["Z"] = botzConfig.presetNodes[index].z;
     }
 
+    //for (uint32_t index = 0; index < botzConfig.presetNodes.size(); index++) {
+    //    csgo::Vector newNode;
+    //    newNode.x = node["X"].asFloat();
+    //    newNode.y = node["Y"].asFloat();
+    //    newNode.z = node["Z"].asFloat();
+    //    botzConfig.presetNodes.push_back(newNode);
+    //    botzConfig.nodeGroup.push_back(node["nodeGroup"].asInt());
+    //}
+
+
     TCHAR path[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
@@ -1646,13 +1656,27 @@ void Misc::readPresetNodes() noexcept {
         }
         file_in.close();
     }
+    //if (botzConfig.presetNodes.size() == 0) {
+    //    botzConfig.presetNodes = std::vector<csgo::Vector>();
+    //}
+    //if (botzConfig.nodeGroup.size() == 0) {
+    //    botzConfig.nodeGroup = std::vector<int> nodeGroup;
+    //}
+
 
     botzConfig.presetNodes.clear(); // clear current nodes
 
-    Json::Value loadedNodes = loadedPresetNodes["Nodes"];
+    Json::Value loadedNodes = loadedPresetNodes["BotNodes"]["Nodes"];
+
+    //botzConfig.presetNodes.resize(loadedPresetNodes.size());
+    //botzConfig.nodeGroup.resize(loadedPresetNodes.size());
+
     for (auto& nodeNumber : loadedNodes.getMemberNames()) {
         Json::Value node = loadedNodes[nodeNumber];
-        botzConfig.presetNodes[std::stoul(nodeNumber)] = csgo::Vector{ node["X"].asFloat(), node["Y"].asFloat(), node["Z"].asFloat() };
+        //botzConfig.nodeGroup[std::stoul(nodeNumber)] = node["nodeGroup"].asInt();
+        //botzConfig.presetNodes[std::stoul(nodeNumber)] = csgo::Vector{ node["X"].asFloat(), node["Y"].asFloat(), node["Z"].asFloat() };
+        botzConfig.presetNodes.push_back(csgo::Vector{ node["X"].asFloat(), node["Y"].asFloat(), node["Z"].asFloat() });
+        botzConfig.nodeGroup.push_back(node["nodeGroup"].asInt());
     }
 
 
