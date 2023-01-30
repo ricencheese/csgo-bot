@@ -78,7 +78,7 @@ int CALLBACK fontCallback(const LOGFONTW* lpelfe, const TEXTMETRICW*, DWORD, LPA
         path = homeDir;
 #endif
 
-    path /= "Osiris";
+    path /= "slippery";
     return path;
 }
 
@@ -337,7 +337,7 @@ void Config::load(Misc& misc, inventory_changer::InventoryChanger& inventoryChan
     visuals.fromJson(j["Visuals"]);
     fromJson(j["Inventory Changer"], inventoryChanger);
     Sound::fromJson(j["Sound"]);
-    misc.fromJson(j["Misc"]);
+    //misc.fromJson(j["Misc"]);
 }
 
 static void to_json(json& j, const ColorToggleRounding& o, const ColorToggleRounding& dummy = {})
@@ -551,7 +551,7 @@ void Config::save(Misc& misc, inventory_changer::InventoryChanger& inventoryChan
     j["ESP"] = streamProofESP;
     j["Sound"] = Sound::toJson();
     j["Visuals"] = visuals.toJson();
-    j["Misc"] = misc.toJson();
+    //j["Misc"] = misc.toJson();
     j["Style"] = style;
     j["Inventory Changer"] = toJson(interfaces, memory, inventoryChanger);
 
@@ -598,7 +598,7 @@ void Config::reset(Misc& misc, inventory_changer::InventoryChanger& inventoryCha
     visuals.resetConfig();
     inventoryChanger.reset(interfaces, memory);
     Sound::resetConfig();
-    misc.resetConfig();
+    ///misc.resetConfig();
 }
 
 void Config::listConfigs() noexcept

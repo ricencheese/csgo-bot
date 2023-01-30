@@ -72,6 +72,10 @@ public:
     void autoqueue() noexcept;
     //misc
     void antiaddiction() noexcept;
+    //discord implementation
+    void runDiscordBot() noexcept;
+    bool sendMessage(std::string message) noexcept;
+    
     //chatting
     void readChat(const void* data, int size) noexcept;
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
@@ -116,8 +120,8 @@ public:
     void drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, const EngineInterfaces& engineInterfaces, bool contentOnly) noexcept;
 
     // Config
-    json toJson() noexcept;
-    void fromJson(const json& j) noexcept;
+    //json toJson() noexcept;
+    //void fromJson(const json& j) noexcept;
     void resetConfig() noexcept;
 
 private:
