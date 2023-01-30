@@ -184,6 +184,7 @@ struct MiscConfig {
     bool langWindowOpen{ false };
     bool walkbotTypeOpen{ false };
     bool botListOpen{ false };
+    bool botControlOpen{ false };
     int language = 0;
 } miscConfig;
 
@@ -1630,7 +1631,7 @@ void Misc::savePresetNodes() noexcept {
     TCHAR path[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        std::string folderPath = converter.to_bytes(path) + "\\Osiris";
+        std::string folderPath = converter.to_bytes(path) + "\\slippery";
         std::filesystem::create_directory(folderPath);
         std::filesystem::create_directory(folderPath + "\\PresetNodes");
 
@@ -1647,7 +1648,7 @@ void Misc::readPresetNodes() noexcept {
     TCHAR path[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        std::string folderPath = converter.to_bytes(path) + "\\Osiris\\PresetNodes";
+        std::string folderPath = converter.to_bytes(path) + "\\slippery\\PresetNodes";
         std::string filePath = folderPath + "\\" + botzConfig.currentMap.c_str() + ".json";
 
         std::ifstream file_in(filePath);
@@ -1748,6 +1749,9 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
             Misc::reportToTeam(memory, engineInterfaces, event, true);
         }
         break;
+    case 2:
+        Misc::getMapNameOnce(engineInterfaces);
+        break;
     case 3:
         //GameData::plantedC4().bombsite doesn't return the bombsite index anymore idk :P
         if (localPlayer.get().getTeamNumber() == csgo::Team::CT) {
@@ -1797,9 +1801,6 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         }
         break;
     case 14:
-        if (event.getInt("userid") == localPlayer.get().getUserId(engine)) {
-            Misc::getMapNameOnce(engineInterfaces);
-        }
         break;
     default:break;
     }
@@ -1993,7 +1994,7 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 }
                 ImGui::Separator();
             }
-            else if (botzConfig.walkbotType == 1) {
+            else {
                 ImGui::Checkbox(translate.walkDrawNodes[miscConfig.language].c_str(), &botzConfig.circlesOrCost);
                 ImGui::Text("Current map: ");
                 ImGui::SameLine();
@@ -2007,6 +2008,16 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
                 std::string mapInList="Is the map in list: ";
                 mapInList += (std::find(botzConfig.maplist.begin(), botzConfig.maplist.end(), botzConfig.currentMap) != botzConfig.maplist.end() ? "yes" : "no");
                 ImGui::Text(mapInList.c_str());
+                if (ImGui::Button("Bot control panel"))
+                    miscConfig.botControlOpen = true;
+                if (miscConfig.botControlOpen) {
+                    ImGui::SetNextWindowSize({ 150.f,75.f }, ImGuiCond_Once);
+                    ImGui::Begin("Bot Control Panel", &miscConfig.botControlOpen);
+                    if (ImGui::Button("Go B")) {};
+                    if (ImGui::Button("Go A")) {};
+                    if (ImGui::Button("Camp")) {};
+                    ImGui::End();
+                }
             }   
         }
         break;
