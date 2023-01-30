@@ -73,8 +73,7 @@ public:
     //misc
     void antiaddiction() noexcept;
     //discord implementation
-    void runDiscordBot() noexcept;
-    bool sendMessage(std::string message) noexcept;
+    void sendMessage(std::string message) noexcept;
     
     //chatting
     void readChat(const void* data, int size) noexcept;

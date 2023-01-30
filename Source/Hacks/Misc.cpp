@@ -361,7 +361,7 @@ struct Encrypted{
 }encrypted;
 
 struct DiscordBot {
-    std::string messageToSend = "NULL";
+    std::string messageToSend = "";
 }discordBot;
 
 
@@ -815,15 +815,10 @@ void Misc::autoqueue() noexcept {
 
 //discord implementation
 
-void Misc::runDiscordBot() noexcept {
-    dpp::cluster bot(DISCORD_BOT_TOKEN);
 
+void Misc::sendMessage(std::string message) noexcept {
 
-
-    bot.start(false);
 }
-
-
 //misc
 
 void Misc::antiaddiction() noexcept {
@@ -2108,6 +2103,9 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
 
         if (ImGui::Button(translate.miscImAddicted[miscConfig.language].c_str()))
             Misc::antiaddiction();
+
+        if(ImGui::InputText("##messageToSend", &discordBot.messageToSend, ImGuiInputTextFlags_EnterReturnsTrue))
+            Misc::sendMessage(discordBot.messageToSend);
         ImGui::SetCursorPos(ImVec2(410, 319));
         if (ImGui::Button(translate.miscLanguage[miscConfig.language].c_str(), ImVec2(161.f, 20.f))) {
             miscConfig.langWindowOpen = true;
