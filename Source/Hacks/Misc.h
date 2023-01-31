@@ -103,8 +103,12 @@ public:
         void savePresetNodes() noexcept;
         void readPresetNodes() noexcept;
         void getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept;
-
         void openNode(const EngineInterfaces& engineInterfaces, int nodeIndex) noexcept;
+
+        //misc bot shit
+        void runBuybot(const EngineInterfaces& engineInterfaces) noexcept;
+
+
     void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept;
     void handleRadioCommands(const csgo::GameEvent& event, const EngineInterfaces& engineInterfaces) noexcept;
     void handleBotzEvents(const Memory& memory,const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, const ClientInterfaces& clientInterfaces,int eventType) noexcept;

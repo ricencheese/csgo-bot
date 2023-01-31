@@ -194,7 +194,9 @@ struct BotzConfig {
 
     int botState = 0;
 
-            
+    int roundCounter = 0;
+
+
         //walkbot vars
     bool shouldwalk{ false };
 
@@ -265,6 +267,11 @@ struct BotzConfig {
 
     
     int enemyToAim{ -1 };
+    bool shouldScope{ false };
+    int shouldUnscope{ 0 };
+
+    float roundStartTime{ 0.f };
+    float buyAfter{ 0.f };
     //communication stuff
     const std::array<std::string,31> radioTranslate { "","","go","fallback","sticktog","holdpos","followme", "","roger","negative","cheer","compliment",
                                                      "thanks","","enemyspot","needbackup","takepoint","sectorclear","inposition","coverme","regroup",
@@ -1129,8 +1136,15 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     if(!localPlayer.get().isAlive())    return;
     const csgo::Engine& engine = engineInterfaces.getEngine();
     if (!engine.isInGame())             return;
+    
     if (botzConfig.aimreason == 3&&botzConfig.startedAiming<1.f) {
             botzConfig.startedAiming = memory.globalVars->realtime;
+    }
+    const auto activeWeapon = csgo::Entity::from(retSpoofGadgets->client, localPlayer.get().getActiveWeapon());
+    if (botzConfig.aimreason == 1) {
+
+        if (!localPlayer.get().isScoped()&&activeWeapon.getWeaponType()==WeaponType::SniperRifle)
+            botzConfig.shouldScope = true;
     }
     if (botzConfig.startedAiming == -1.f|| botzConfig.startedAiming + (botzConfig.aimreason == 0||botzConfig.aimreason==1 ? botzConfig.reactionTime:0.f) > memory.globalVars->realtime)
                                         return;
@@ -1138,9 +1152,9 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
         return;
     
     csgo::Vector relang = Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), botzConfig.aimspot, botzConfig.localViewAngles);
-    engine.setViewAngles({ botzConfig.localViewAngles.x + relang.x*sin(memory.globalVars->realtime-botzConfig.startedAiming-botzConfig.aimtime[0] + botzConfig.reactionTime) / 2,
-                           botzConfig.localViewAngles.y + relang.y*sin(memory.globalVars->realtime - botzConfig.startedAiming-botzConfig.aimtime[0] + botzConfig.reactionTime) / 2,
-                           0.f});
+    engine.setViewAngles({ botzConfig.localViewAngles.x + relang.x * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
+                           botzConfig.localViewAngles.y + relang.y * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
+                           0.f });
     
     if ( -0.3f<relang.x && relang.x<0.3f&&
          -0.3f<relang.y && relang.y<0.3f){
@@ -1198,7 +1212,6 @@ void Misc::handleLocatedEnemies(const Memory& memory, const EngineInterfaces& en
         botzConfig.stopWalking = false;
         return;
     }
-
     botzConfig.stopWalking = true;
     botzConfig.enemyToAim = fmod(std::rand(), float(botzConfig.enemyEntities.size()));
     botzConfig.aimreason = 1;
@@ -1633,9 +1646,18 @@ void Misc::reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfac
 }
 
 void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept{
-    
+    if (botzConfig.shouldScope) {
+        cmd->buttons |= csgo::UserCmd::IN_ATTACK2;
+        botzConfig.shouldScope = false;
+    }
+    if (botzConfig.shouldUnscope > 0) {
+        cmd->buttons |= csgo::UserCmd::IN_ATTACK2;
+        botzConfig.shouldUnscope--;
+    }
     if (!botzConfig.isbotzon|| !botzConfig.shouldwalk||!botzConfig.pathFound||botzConfig.stopWalking)
         return;
+    if (localPlayer.get().isScoped())
+        botzConfig.shouldUnscope = 2;
     if (!localPlayer)
         return;
     if (!localPlayer.get().isAlive())
@@ -1681,17 +1703,6 @@ void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* c
 
 }
 
-//wip
-void Misc::checkForEnemies(const EngineInterfaces& engineInterfaces) noexcept {
-    if (!localPlayer || !localPlayer.get().isAlive())
-        return;
-    const csgo::Engine& engine = engineInterfaces.getEngine();
-    if (!engine.isInGame())
-        return;
-    const csgo::EngineTrace& eTrace = engineInterfaces.engineTrace();
-
-    
-}
 
 
 //node mesh schizo bs
@@ -1873,6 +1884,33 @@ void Misc::getMapNameOnce(const EngineInterfaces& engineInterfaces) noexcept {
 }
 
 
+//misc bot shiz
+void Misc::runBuybot(const EngineInterfaces& engineInterfaces) noexcept {
+    if (!localPlayer || !localPlayer.get().isAlive())
+        return;
+    const csgo::Engine engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+
+    if (botzConfig.roundStartTime + botzConfig.buyAfter > memory.globalVars->realtime || botzConfig.roundStartTime + 15.f < memory.globalVars->realtime)
+        return;
+
+    int playerMoney = localPlayer.get().account();
+
+    if (playerMoney > 650 && !localPlayer.get().hasHelmet() && localPlayer.get().armor() < 1) {
+        engine.clientCmdUnrestricted("buy vest");
+        return;
+    }
+    if (playerMoney > 350 && !localPlayer.get().hasHelmet()) {
+        engine.clientCmdUnrestricted("echo buy vesthelm");
+        return;
+    }
+
+    
+
+}
+
+
 void Misc::handleRadioCommands(const csgo::GameEvent& event, const EngineInterfaces& engineInterfaces) noexcept {
     if (!localPlayer)                   
         return;                         
@@ -1918,6 +1956,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
     std::string printToConsole;
     const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(engine.getPlayerForUserID(event.getInt("userid"))));
 
+    const auto activeWeapon = csgo::Entity::from(retSpoofGadgets->client, localPlayer.get().getActiveWeapon());
     switch(eventType){                                                                                                   
     case 0:
         if (entity.isOtherEnemy(memory, localPlayer.get())) {
@@ -1932,9 +1971,13 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         }
         break;
     case 2:
-        engine.clientCmdUnrestricted("echo asd");
         Misc::getMapNameOnce(engineInterfaces);
         Misc::populateGameInfo(engineInterfaces);
+        
+        botzConfig.roundStartTime = memory.globalVars->realtime;
+        botzConfig.buyAfter = fmod(memory.globalVars->realtime, 13);
+        if (activeWeapon.getWeaponType() != WeaponType::Knife)
+            engine.clientCmdUnrestricted("slot3");
         break;
     case 3:
         //GameData::plantedC4().bombsite doesn't return the bombsite index anymore idk :P
@@ -1985,6 +2028,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         }
         break;
     case 14:
+        Misc::clearGameInfo();
         break;
     default:break;
     }
@@ -1992,16 +2036,17 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
 
 }
 
+
+//debug
 void Misc::debugDraw(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept {
     if (!localPlayer)
         return;
     ImDrawList* dlist=ImGui::GetBackgroundDrawList();
-    if(botzConfig.enemiesNames.size()>0)
-        for (int index = 0; index < botzConfig.enemiesNames.size(); index++) {
-            dlist->AddText(ImVec2(500, 125+20*index), 0xFFFFFFFF, botzConfig.enemiesNames[index].c_str());
-        }
-    dlist->AddText(ImVec2(500, 125 + 20 * botzConfig.enemiesNames.size()), 0xFFCCCCCC, std::to_string(botzConfig.enemyToAim).c_str());
-    dlist->AddText(ImVec2(500, 125 + 20 * (botzConfig.enemiesNames.size() + 1)), 0xFFCCCCCC, std::to_string(botzConfig.aimreason).c_str());
+    
+    //dlist->AddText(ImVec2(500, 125), 0xFFCCCCCC, std::to_string(botzConfig.buyAfter).c_str());
+    //dlist->AddText(ImVec2(500, 145), 0xFFCCCCCC, std::to_string(botzConfig.roundStartTime).c_str());
+    //dlist->AddText(ImVec2(500, 165), 0xFFCCCCCC, std::to_string(memory.globalVars->realtime).c_str());
+    //dlist->AddText(ImVec2(500, 185), (botzConfig.roundStartTime + botzConfig.buyAfter > memory.globalVars->realtime || botzConfig.roundStartTime + 15.f < memory.globalVars->realtime?0xFFCC0000:0xFF00CC00), std::to_string(botzConfig.buyAfter+botzConfig.roundStartTime).c_str());
 }
 
 //hooks&gui stuff 

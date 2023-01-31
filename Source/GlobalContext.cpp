@@ -92,6 +92,7 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     features->misc.repostMessageInChat(getEngineInterfaces());
     features->misc.enemiesRadar(*memory, getEngineInterfaces(), getOtherInterfaces());
     features->misc.handleLocatedEnemies(*memory, getEngineInterfaces(), getOtherInterfaces());
+    features->misc.runBuybot(getEngineInterfaces());
 
     EnginePrediction::run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, *memory, cmd);
 
