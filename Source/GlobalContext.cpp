@@ -89,6 +89,7 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     features->misc.reload(cmd, *memory, getEngineInterfaces());
     features->misc.findPath(getEngineInterfaces());
     features->misc.chatBot(getEngineInterfaces(), *memory);
+    features->misc.repostMessageInChat(getEngineInterfaces());
 
     EnginePrediction::run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, *memory, cmd);
 

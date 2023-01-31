@@ -73,8 +73,10 @@ public:
     //misc
     void antiaddiction() noexcept;
     //discord implementation
-    void sendMessage(std::string message) noexcept;
-    
+    void repostMessageInChat(const EngineInterfaces& engineInterfaces) noexcept;
+    void populateGameInfo(const EngineInterfaces& engineInterfaces) noexcept;
+    void clearGameInfo() noexcept;
+
     //chatting
     void readChat(const void* data, int size) noexcept;
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;

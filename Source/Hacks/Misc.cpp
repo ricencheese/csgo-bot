@@ -6,6 +6,8 @@
 #include <numeric>
 #include <sstream>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 #include <imgui/imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -61,10 +63,6 @@
 
 #include "../imguiCustom.h"
 #include <Interfaces/ClientInterfaces.h>
-
-
-const std::string DISCORD_BOT_TOKEN = "MTA2OTY2NzUyNjIwNTc3NTg3Mg.G3jykw.DPrkmCed537R7vSKOXpo4yL5lsf_JB94wnIXBE";
-#include <dpp/dpp.h>
 
 
 struct PreserveKillfeed {
@@ -362,6 +360,7 @@ struct Encrypted{
 
 struct DiscordBot {
     std::string messageToSend = "";
+    bool isMessageSent = true;
 }discordBot;
 
 
@@ -370,6 +369,12 @@ void pop_front(std::vector<T>& vec)
 {
     assert(!vec.empty());
     vec.erase(vec.begin());
+}
+
+bool doesFileExist(const std::string& filePath) noexcept
+{
+    std::ifstream f(filePath.c_str());
+    return f.good();
 }
 
 panorama::IUIPanel* Misc::GetRoot(bool inGame) noexcept
@@ -815,9 +820,102 @@ void Misc::autoqueue() noexcept {
 
 //discord implementation
 
+void Misc::repostMessageInChat(const EngineInterfaces& engineInterfaces) noexcept {
+    const csgo::Engine engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+    std::filesystem::path path;
+    if (PWSTR pathToDocs; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pathToDocs))) {
+        path = pathToDocs;
+        CoTaskMemFree(pathToDocs);
+    }
+    std::string strPath;
+    strPath = (path.string() + "/slippery/messageBack.txt");
 
-void Misc::sendMessage(std::string message) noexcept {
+    std::ifstream t(strPath);
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    if (buffer.str().size() < 1)
+        return;
+    std::string messageToSend = "say ";
+    messageToSend += buffer.str();
+    engine.clientCmdUnrestricted(messageToSend.c_str());
 
+    std::ofstream messageFile;
+    messageFile.open(strPath);
+    messageFile << "";
+    messageFile.close();
+
+
+}
+
+void Misc::populateGameInfo(const EngineInterfaces& engineInterfaces) noexcept {
+
+    const csgo::Engine& engine = engineInterfaces.getEngine();
+    engine.clientCmdUnrestricted("echo started populating");
+    if (!engine.isInGame())
+        return;
+
+    std::filesystem::path path;
+    if (PWSTR pathToDocs; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pathToDocs))) {
+        path = pathToDocs;
+        CoTaskMemFree(pathToDocs);
+    }
+    engine.clientCmdUnrestricted("echo found my documents folder");
+    std::string strPath;
+    strPath = (path.string() + "/slippery/gameinfo.txt");
+    engine.clientCmdUnrestricted("echo found gameinfo.txt");
+
+    csgo::PlayerInfo pInfo;
+    engine.getPlayerInfo(engine.getPlayerForUserID(localPlayer.get().getUserId(engine)), pInfo);
+    std::string pName = pInfo.name;
+    std::srand(memory.globalVars->realtime);
+    engine.clientCmdUnrestricted("echo actual populating thing started");
+    std::ofstream messageFile;
+    std::string fullMessage="";
+    messageFile.open(strPath);
+    fullMessage += "Gameid:";
+    fullMessage += std::to_string(std::rand());
+    fullMessage += "\nName:";
+    fullMessage += pName;
+    fullMessage += "\nMap:";
+    fullMessage += engine.getLevelName();
+    fullMessage += "\nKills:not implemented yet sorry";
+    fullMessage += "\nDeaths:not implemented yet sorry";
+    fullMessage += "\nScore:not implemented yet sorry";
+        
+    for (int i = 1; i <= engineInterfaces.getEngine().getMaxClients(); i++) {
+        const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(i));
+        if (entity.getPOD() == nullptr)
+            continue;
+        csgo::PlayerInfo pInfo2;
+        engine.getPlayerInfo(engine.getPlayerForUserID(entity.getUserId(engine)), pInfo2);
+        std::string pName2 = pInfo2.name;
+
+        fullMessage += "\nPlayer:";
+        fullMessage += pName2;
+    }
+    messageFile << fullMessage;
+    messageFile.close();
+    engine.clientCmdUnrestricted("echo done");
+
+ }
+
+
+void Misc::clearGameInfo() noexcept{
+
+    std::filesystem::path path;
+    if (PWSTR pathToDocs; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pathToDocs))) {
+        path = pathToDocs;
+        CoTaskMemFree(pathToDocs);
+    }
+    std::string strPath;
+    strPath = (path.string() + "/slippery/gameinfo.txt");
+
+    std::ofstream messageFile;
+    messageFile.open(strPath);
+    messageFile << "";
+    messageFile.close();
 }
 //misc
 
@@ -847,12 +945,12 @@ void Misc::readChat(const void* data, int size) noexcept {
     miscConfig.message = params[1];
     miscConfig.playeruid = ent_idx;
     miscConfig.messageLoggedAt = memory.globalVars->realtime;
+    discordBot.isMessageSent = false;
+
 
 }
 
 void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& memory) noexcept{
-    if (!miscConfig.overheadChat)
-        return;
     if (!localPlayer)
         return;
 
@@ -867,11 +965,37 @@ void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& m
         return;
 
 
+
+
     //int entIndex = engine.getPlayerForUserID(miscConfig.playeruid);
     const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(miscConfig.playeruid));
     csgo::PlayerInfo pInfo;
     engine.getPlayerInfo(miscConfig.playeruid, pInfo);
     std::string pName = pInfo.name;
+
+    if (!discordBot.isMessageSent) {
+        std::filesystem::path path;
+        if (PWSTR pathToDocs; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pathToDocs))) {
+            path = pathToDocs;
+            CoTaskMemFree(pathToDocs);
+        }
+        std::string strPath;
+        strPath = (path.string() + "/slippery/message.txt");
+
+        std::ofstream messageFile;
+        std::string messageOut = pName;
+        messageOut += ": ";
+        messageOut += miscConfig.message;
+        messageFile.open(strPath);
+        messageFile << messageOut;
+        messageFile.close();
+
+        discordBot.isMessageSent = true;
+    }
+
+    if (!miscConfig.overheadChat)
+        return;
+
     pName += (entity.getTeamNumber() == csgo::Team::CT ? " - CT" : " - T ");
     ImVec2 playerOnScreen;
     Helpers::worldToScreenPixelAligned({ entity.getAbsOrigin().x, entity.getAbsOrigin().y, entity.getEyePosition().z + 15.f }, playerOnScreen);
@@ -1630,15 +1754,6 @@ void Misc::savePresetNodes() noexcept {
         node["Z"] = botzConfig.presetNodes[index].z;
     }
 
-    //for (uint32_t index = 0; index < botzConfig.presetNodes.size(); index++) {
-    //    csgo::Vector newNode;
-    //    newNode.x = node["X"].asFloat();
-    //    newNode.y = node["Y"].asFloat();
-    //    newNode.z = node["Z"].asFloat();
-    //    botzConfig.presetNodes.push_back(newNode);
-    //    botzConfig.nodeGroup.push_back(node["nodeGroup"].asInt());
-    //}
-
 
     TCHAR path[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
@@ -2104,8 +2219,12 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         if (ImGui::Button(translate.miscImAddicted[miscConfig.language].c_str()))
             Misc::antiaddiction();
 
-        if(ImGui::InputText("##messageToSend", &discordBot.messageToSend, ImGuiInputTextFlags_EnterReturnsTrue))
-            Misc::sendMessage(discordBot.messageToSend);
+        if (ImGui::Button("Populate game info"))
+            Misc::populateGameInfo(engineInterfaces);
+        
+        if (ImGui::Button("Clear game info"))
+            Misc::clearGameInfo();
+
         ImGui::SetCursorPos(ImVec2(410, 319));
         if (ImGui::Button(translate.miscLanguage[miscConfig.language].c_str(), ImVec2(161.f, 20.f))) {
             miscConfig.langWindowOpen = true;
