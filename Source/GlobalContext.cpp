@@ -90,6 +90,8 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     features->misc.findPath(getEngineInterfaces());
     features->misc.chatBot(getEngineInterfaces(), *memory);
     features->misc.repostMessageInChat(getEngineInterfaces());
+    features->misc.enemiesRadar(*memory, getEngineInterfaces(), getOtherInterfaces());
+    features->misc.handleLocatedEnemies(*memory, getEngineInterfaces(), getOtherInterfaces());
 
     EnginePrediction::run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, *memory, cmd);
 
@@ -490,6 +492,7 @@ void GlobalContext::fireGameEventCallback(csgo::GameEventPOD* eventPointer)
     switch (fnv::hashRuntime(event.getName())) {
     case fnv::hash(csgo::round_start):
         GameData::clearProjectileList();
+        features->misc.handleBotzEvents(*memory, getEngineInterfaces(), event, ClientInterfaces {retSpoofGadgets->client, * clientInterfaces}, 2);
         [[fallthrough]];
     case fnv::hash(csgo::round_freeze_end):
         break;
@@ -540,7 +543,7 @@ void GlobalContext::renderFrame()
         features->misc.drawPath(getEngineInterfaces());
         features->misc.drawPathfinding(getEngineInterfaces());
         features->misc.drawPresetNodes(getEngineInterfaces());
-
+        features->misc.debugDraw(*memory, getEngineInterfaces());
 
         features->visuals.thirdperson();
         features->aimbot.updateInput(*config);

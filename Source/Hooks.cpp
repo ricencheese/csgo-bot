@@ -185,7 +185,7 @@ void Hooks::uninstall(Misc& misc, Glow& glow, const EngineInterfaces& engineInte
 {
     misc.updateEventListeners(engineInterfaces, true);
     visuals.updateEventListeners(true);
-
+    misc.clearGameInfo();
 #if IS_WIN32()
     if constexpr (std::is_same_v<HookType, MinHook>) {
         MH_DisableHook(MH_ALL_HOOKS);

@@ -82,9 +82,11 @@ public:
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     void chatBot(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     //botzzzzzzzzzzz shiz
-        
+        //aimbot shiz
+        void aimAtEvent(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
+        void enemiesRadar(const Memory& memory,const EngineInterfaces& engineInterfaces, const OtherInterfaces& interfaces) noexcept;
+        void handleLocatedEnemies(const Memory& memory, const EngineInterfaces& engineInterfaces, const OtherInterfaces& interfaces) noexcept;
         //proper pathfinding
-        void aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfaces) noexcept;
         void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
         void drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept;
         void findPath(const EngineInterfaces& engineInterfaces) noexcept;
@@ -114,7 +116,9 @@ public:
 
     void updateEventListeners(const EngineInterfaces& engineInterfaces, bool forceRemove = false) noexcept;
     void updateInput() noexcept;
-
+    
+    //debug
+    void debugDraw(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
     // GUI
     void menuBarItem() noexcept;
     void tabItem(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, const EngineInterfaces& engineInterfaces) noexcept;

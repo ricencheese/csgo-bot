@@ -223,7 +223,7 @@ struct BotzConfig {
     bool shouldGoTowardsPing{ false };
     bool traceToParentIntersects{ false };
     std::vector<csgo::Vector>parentOffset;
-
+    bool stopWalking{ false };
         //walkbot type 1 (node pathfinding)
     std::vector<csgo::Vector> presetNodes;
     const std::array<std::string,3> maplist{ "borbot","de_mirage",""};//supported maps
@@ -259,6 +259,12 @@ struct BotzConfig {
     bool shouldFire{ false };
     bool aimAtPath{ false };
 
+    std::vector<csgo::Vector> enemiesPositions; //list of enemies that we can aim at (line of sight+fov)
+    std::vector<std::string> enemiesNames;//debug info
+    std::vector<csgo::Entity> enemyEntities;
+
+    
+    int enemyToAim{ -1 };
     //communication stuff
     const std::array<std::string,31> radioTranslate { "","","go","fallback","sticktog","holdpos","followme", "","roger","negative","cheer","compliment",
                                                      "thanks","","enemyspot","needbackup","takepoint","sectorclear","inposition","coverme","regroup",
@@ -869,13 +875,10 @@ void Misc::populateGameInfo(const EngineInterfaces& engineInterfaces) noexcept {
     csgo::PlayerInfo pInfo;
     engine.getPlayerInfo(engine.getPlayerForUserID(localPlayer.get().getUserId(engine)), pInfo);
     std::string pName = pInfo.name;
-    std::srand(memory.globalVars->realtime);
     engine.clientCmdUnrestricted("echo actual populating thing started");
     std::ofstream messageFile;
     std::string fullMessage="";
     messageFile.open(strPath);
-    fullMessage += "Gameid:";
-    fullMessage += std::to_string(std::rand());
     fullMessage += "\nName:";
     fullMessage += pName;
     fullMessage += "\nMap:";
@@ -967,7 +970,6 @@ void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& m
 
 
 
-    //int entIndex = engine.getPlayerForUserID(miscConfig.playeruid);
     const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(miscConfig.playeruid));
     csgo::PlayerInfo pInfo;
     engine.getPlayerInfo(miscConfig.playeruid, pInfo);
@@ -1130,7 +1132,7 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     if (botzConfig.aimreason == 3&&botzConfig.startedAiming<1.f) {
             botzConfig.startedAiming = memory.globalVars->realtime;
     }
-    if (botzConfig.startedAiming == -1.f|| botzConfig.startedAiming + (botzConfig.aimreason == 0 ? botzConfig.reactionTime:0.f) > memory.globalVars->realtime)
+    if (botzConfig.startedAiming == -1.f|| botzConfig.startedAiming + (botzConfig.aimreason == 0||botzConfig.aimreason==1 ? botzConfig.reactionTime:0.f) > memory.globalVars->realtime)
                                         return;
     if (botzConfig.aimreason==0&&!botzConfig.isShooterVisible)
         return;
@@ -1143,7 +1145,7 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     if ( -0.3f<relang.x && relang.x<0.3f&&
          -0.3f<relang.y && relang.y<0.3f){
             botzConfig.startedAiming = -1.f;
-            if (botzConfig.aimreason == 3) {
+            if (botzConfig.aimreason == 3||botzConfig.aimreason==1) {
                 botzConfig.shouldFire = true;
             }
             botzConfig.aimreason = -1;
@@ -1151,6 +1153,59 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     }
 }
 
+//populates a vector of enemy positions and enemy names if any enemy is in sight (line of sight+fov check)
+void Misc::enemiesRadar(const Memory& memory,const EngineInterfaces& engineInterfaces,const OtherInterfaces& interfaces) noexcept {
+    if (!botzConfig.isbotzon)
+        return;
+    if (!localPlayer || !localPlayer.get().isAlive())
+        return;
+    const csgo::Engine& engine = engineInterfaces.getEngine();
+    if (!engine.isInGame() || !engine.isConnected())
+        return;
+
+    botzConfig.enemiesNames.clear();
+    botzConfig.enemiesPositions.clear();
+    botzConfig.enemyEntities.clear();
+    for (int i = 1; i <= engineInterfaces.getEngine().getMaxClients(); i++) {
+        const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(i));
+        if (entity.getPOD() == nullptr||!entity.isAlive()||!entity.isOtherEnemy(memory,localPlayer.get()))
+            continue;
+        if (fabs(Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), entity.getEyePosition(), localPlayer.get().eyeAngles()).y) > 80)
+            continue;
+
+        csgo::Trace trace;
+        engineInterfaces.engineTrace().traceRay({ localPlayer.get().getEyePosition(),{entity.getEyePosition().x,entity.getEyePosition().y,entity.getEyePosition().z+20.f}}, MASK_OPAQUE, localPlayer.get().getPOD(), trace);
+        if (trace.contents != 0)
+            continue;
+        
+        botzConfig.enemiesNames.push_back(entity.getPlayerName(interfaces,memory));
+        botzConfig.enemiesPositions.push_back(entity.getEyePosition());
+        botzConfig.enemyEntities.push_back(entity);
+        
+    }
+    
+}
+
+void Misc::handleLocatedEnemies(const Memory& memory, const EngineInterfaces& engineInterfaces, const OtherInterfaces& interfaces) noexcept {
+    if (!localPlayer || !localPlayer.get().isAlive())
+        return;
+    const auto engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+    if (botzConfig.aimreason == 1)
+        return;
+    if (botzConfig.enemyEntities.size() < 1) {
+        botzConfig.stopWalking = false;
+        return;
+    }
+
+    botzConfig.stopWalking = true;
+    botzConfig.enemyToAim = fmod(std::rand(), float(botzConfig.enemyEntities.size()));
+    botzConfig.aimreason = 1;
+    std::vector<int> bones = { 8, 4, 3, 7, 6, 5 };
+    botzConfig.aimspot = botzConfig.enemyEntities[botzConfig.enemyToAim].getBonePosition(bones[fmod(std::rand(), float(bones.size()))]);
+    botzConfig.startedAiming = memory.globalVars->realtime;
+}
 
 //proper pathfinding
 void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept {
@@ -1579,7 +1634,7 @@ void Misc::reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfac
 
 void Misc::gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept{
     
-    if (!botzConfig.isbotzon|| !botzConfig.shouldwalk||!botzConfig.pathFound)
+    if (!botzConfig.isbotzon|| !botzConfig.shouldwalk||!botzConfig.pathFound||botzConfig.stopWalking)
         return;
     if (!localPlayer)
         return;
@@ -1877,7 +1932,9 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         }
         break;
     case 2:
+        engine.clientCmdUnrestricted("echo asd");
         Misc::getMapNameOnce(engineInterfaces);
+        Misc::populateGameInfo(engineInterfaces);
         break;
     case 3:
         //GameData::plantedC4().bombsite doesn't return the bombsite index anymore idk :P
@@ -1933,6 +1990,18 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
     }
     
 
+}
+
+void Misc::debugDraw(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept {
+    if (!localPlayer)
+        return;
+    ImDrawList* dlist=ImGui::GetBackgroundDrawList();
+    if(botzConfig.enemiesNames.size()>0)
+        for (int index = 0; index < botzConfig.enemiesNames.size(); index++) {
+            dlist->AddText(ImVec2(500, 125+20*index), 0xFFFFFFFF, botzConfig.enemiesNames[index].c_str());
+        }
+    dlist->AddText(ImVec2(500, 125 + 20 * botzConfig.enemiesNames.size()), 0xFFCCCCCC, std::to_string(botzConfig.enemyToAim).c_str());
+    dlist->AddText(ImVec2(500, 125 + 20 * (botzConfig.enemiesNames.size() + 1)), 0xFFCCCCCC, std::to_string(botzConfig.aimreason).c_str());
 }
 
 //hooks&gui stuff 

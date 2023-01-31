@@ -495,7 +495,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>dpp.lib;shell32.lib;ole32.lib</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;ole32.lib</AdditionalDependencies>
       <EntryPointSymbol>DllEntryPoint</EntryPointSymbol>
     </Link>
     <PostBuildEvent>
