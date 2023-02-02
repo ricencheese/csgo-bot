@@ -1080,31 +1080,37 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     const auto activeWeapon = csgo::Entity::from(retSpoofGadgets->client, localPlayer.get().getActiveWeapon());
     if (botzConfig.aimreason == 1) {
 
-        if (!localPlayer.get().isScoped()&&activeWeapon.getWeaponType()==WeaponType::SniperRifle)
-            botzConfig.shouldScope = true;
-
-
         if (activeWeapon.getWeaponType() == WeaponType::Knife || activeWeapon.getWeaponType() == WeaponType::C4)
             engine.clientCmdUnrestricted("slot1");
+
+        if (!localPlayer.get().isScoped()&&activeWeapon.getWeaponType()==WeaponType::SniperRifle)
+            botzConfig.shouldScope = true;
 
     }
     if (botzConfig.startedAiming == -1.f|| botzConfig.startedAiming + (botzConfig.aimreason == 0||botzConfig.aimreason==1 ? botzConfig.reactionTime:0.f) > memory.globalVars->realtime)
                                         return;
     if (botzConfig.aimreason==0&&!botzConfig.isShooterVisible)
         return;
+    const auto aimPunch = activeWeapon.requiresRecoilControl() ? localPlayer.get().getAimPunch() : csgo::Vector{ };
+
     csgo::Vector relang = Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), botzConfig.aimspot, botzConfig.localViewAngles);
-    engine.setViewAngles({ botzConfig.localViewAngles.x + relang.x * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
-                           botzConfig.localViewAngles.y + relang.y * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
+    engine.setViewAngles({ botzConfig.localViewAngles.x + (relang.x-aimPunch.x*2) * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
+                           botzConfig.localViewAngles.y + (relang.y-aimPunch.y*2) * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
                            0.f });
     
     if ( -0.3f<relang.x && relang.x<0.3f&&
          -0.3f<relang.y && relang.y<0.3f){
             botzConfig.startedAiming = -1.f;
-            if (botzConfig.aimreason == 3||botzConfig.aimreason==1) {
+            if (botzConfig.aimreason == 3||(botzConfig.aimreason==1&&botzConfig.enemyEntities.size()>0)) {
                 botzConfig.shouldFire = true;
-            }
+            }//
             botzConfig.aimreason = -1;
             return;
+    }
+
+    if ((- 2.f > relang.x || relang.x > 2.f ||
+        -2.f > relang.y || relang.y > 2.f  ||botzConfig.enemyEntities.size()<1)) {
+            botzConfig.shouldFire = false;
     }
 }
 
@@ -1188,7 +1194,6 @@ void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd*
     }
     if (botzConfig.shouldFire) {
         cmd->buttons |= csgo::UserCmd::IN_ATTACK;
-        botzConfig.shouldFire = false;
     }
 }
 
@@ -2037,7 +2042,8 @@ void Misc::debugDraw(const Memory& memory, const EngineInterfaces& engineInterfa
     if (!localPlayer)
         return;
     ImDrawList* dlist=ImGui::GetBackgroundDrawList();
-    
+   
+
     //dlist->AddText(ImVec2(500, 125), 0xFFCCCCCC, std::to_string(botzConfig.buyAfter).c_str());
     //dlist->AddText(ImVec2(500, 145), 0xFFCCCCCC, std::to_string(botzConfig.roundStartTime).c_str());
     //dlist->AddText(ImVec2(500, 165), 0xFFCCCCCC, std::to_string(memory.globalVars->realtime).c_str());
