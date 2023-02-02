@@ -186,6 +186,8 @@ struct MiscConfig {
     bool botListOpen{ false };
     bool botControlOpen{ false };
     int language = 0;
+
+    bool overviewOpen{ false };
 } miscConfig;
 
 struct BotzConfig {
@@ -293,6 +295,9 @@ struct BotzConfig {
     bool isListeningForCommands{ false };
     std::vector<int>botsListeningToMe;
 
+
+
+    float zoom = 1.f;
 } botzConfig;
 
 struct Translate{
@@ -2052,6 +2057,78 @@ void Misc::debugDraw(const Memory& memory, const EngineInterfaces& engineInterfa
 
 //hooks&gui stuff 
 
+void Misc::drawOverview(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept {
+    if (!miscConfig.overviewOpen||!gui->isOpen())
+        return;
+    if (!localPlayer || !localPlayer.get().isAlive())
+        return;
+    const csgo::Engine engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+
+    ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Once);
+    ImGui::Begin("Map Overview", &miscConfig.overviewOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar);
+
+    ImDrawList* dlist = ImGui::GetWindowDrawList();
+    for (int index = 0; index < 15; index++) {
+        dlist->AddLine(ImVec2(ImGui::GetWindowPos().x+40*index, ImGui::GetWindowPos().y), ImVec2(ImGui::GetWindowPos().x+40*index, ImGui::GetWindowPos().y+ImGui::GetWindowSize().y), 0x66CCCCCC);
+        dlist->AddLine(ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y+40*index), ImVec2(ImGui::GetWindowPos().x+ImGui::GetWindowSize().x, ImGui::GetWindowPos().y+40*index), 0x66CCCCCC);
+    }
+    dlist->AddRectFilled(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + 42.f, ImGui::GetWindowPos().y + 22.f),0xFF161616);
+    ImGui::SetCursorPos(ImVec2(0, 0));
+    if(ImGui::Button("close"))
+        miscConfig.overviewOpen=false;
+    ImVec2 lPlayerPos = ImVec2(ImGui::GetWindowPos().x+300, ImGui::GetWindowPos().y+300);
+    ImVec2 playerIcon[]{
+        ImVec2(lPlayerPos.x,lPlayerPos.y+ 6.f),
+        ImVec2(lPlayerPos.x-12.f,lPlayerPos.y+12.f),
+        ImVec2(lPlayerPos.x,lPlayerPos.y-12.f),
+        ImVec2(lPlayerPos.x+12.f,lPlayerPos.y+12.f)
+    };
+
+    dlist->AddConvexPolyFilled(playerIcon, 4, 0xFFFFFF00);
+    
+    if (botzConfig.presetNodes.size() < 1)                                                          
+        return;
+
+    ImGui::SameLine();
+    ImGui::PushItemWidth(150.f);
+    ImGui::SliderFloat("zoom:", &botzConfig.zoom, 0.01f, 10.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::PopItemWidth();
+    for (int index = 0; index < botzConfig.presetNodes.size(); index++) {
+        if (botzConfig.presetNodes[index].distTo(localPlayer.get().getAbsOrigin()) > 1800.f)
+            continue;
+
+        
+        ImU32 color;
+        switch (botzConfig.nodeGroup[index]) {
+            case 0: color = 0xFFBBBBBB; break;
+            case 1: color = 0xFFFFA500; break;
+            case 2: color = 0xFFEBD934; break;
+            case 3: color = 0xFFA534EB; break;
+        }
+
+        bool intersects=(
+            (botzConfig.presetNodes[index].x / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().x / botzConfig.zoom + ImGui::GetWindowPos().x)-15.f<ImGui::GetMousePos().x&&
+            (botzConfig.presetNodes[index].x / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().x / botzConfig.zoom + ImGui::GetWindowPos().x)+15.f>ImGui::GetMousePos().x&&
+            (botzConfig.presetNodes[index].y / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().y / botzConfig.zoom + ImGui::GetWindowPos().y)-15.f<ImGui::GetMousePos().y&&
+            (botzConfig.presetNodes[index].y / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().y / botzConfig.zoom + ImGui::GetWindowPos().y)+15.f>ImGui::GetMousePos().y);
+
+        if (intersects)
+            color = 0xFFFF0000;
+
+        dlist->AddCircleFilled(ImVec2((botzConfig.presetNodes[index].x/botzConfig.zoom+300-localPlayer.get().getAbsOrigin().x/botzConfig.zoom+ImGui::GetWindowPos().x), (botzConfig.presetNodes[index].y/botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().y/botzConfig.zoom+ImGui::GetWindowPos().y)), 15.f, color, 8);
+        
+        if (intersects && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            botzConfig.finalDestination = botzConfig.presetNodes[index];
+            Misc::pathfind(engineInterfaces, memory);
+        }
+    }
+
+    ImGui::End();
+
+}
+
 bool Misc::isPlayingDemoHook(ReturnAddress returnAddress, std::uintptr_t frameAddress) const
 {
     return miscConfig.revealMoney && returnAddress == demoOrHLTV && *reinterpret_cast<std::uintptr_t*>(frameAddress + WIN32_LINUX(8, 24)) == money;
@@ -2339,6 +2416,9 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         
         if (ImGui::Button("Clear game info"))
             Misc::clearGameInfo();
+
+        if (ImGui::Button("Map overview"))
+            miscConfig.overviewOpen = true;
 
         ImGui::SetCursorPos(ImVec2(410, 319));
         if (ImGui::Button(translate.miscLanguage[miscConfig.language].c_str(), ImVec2(161.f, 20.f))) {

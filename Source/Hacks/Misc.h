@@ -125,6 +125,7 @@ public:
     //debug
     void debugDraw(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
     // GUI
+    void drawOverview(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
     void menuBarItem() noexcept;
     void tabItem(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, const EngineInterfaces& engineInterfaces) noexcept;
     void drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, const EngineInterfaces& engineInterfaces, bool contentOnly) noexcept;

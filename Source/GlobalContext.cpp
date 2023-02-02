@@ -561,7 +561,7 @@ void GlobalContext::renderFrame()
 
         if (gui->isOpen())
             gui->render(features->misc, features->inventoryChanger, features->glow, features->backtrack, features->visuals, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, *config);
-    
+        features->misc.drawOverview(*memory, getEngineInterfaces());
     }
 
     ImGui::EndFrame();
