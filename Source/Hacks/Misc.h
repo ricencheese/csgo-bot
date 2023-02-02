@@ -86,18 +86,15 @@ public:
         void aimAtEvent(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
         void enemiesRadar(const Memory& memory,const EngineInterfaces& engineInterfaces, const OtherInterfaces& interfaces) noexcept;
         void handleLocatedEnemies(const Memory& memory, const EngineInterfaces& engineInterfaces, const OtherInterfaces& interfaces) noexcept;
-        //proper pathfinding
+        //dynamic nodes pathfinding
         void findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
         void drawPathfinding(const EngineInterfaces& engineInterfaces)noexcept;
         void findPath(const EngineInterfaces& engineInterfaces) noexcept;
         void pathfind(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
         void drawPath(const EngineInterfaces& engineInterfaces) noexcept;
-        void reportToTeam(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event,bool forceReport = false) noexcept;
-        void reload(csgo::UserCmd* cmd, const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
         void gotoBotzPos(const EngineInterfaces& engineInterfaces,csgo::UserCmd* cmd) noexcept;
-        void checkForEnemies(const EngineInterfaces& engineInterfaces) noexcept;
 
-        //node mesh shizzzzzzzz
+        //static nodes pathfinding
         void addNewNode(const EngineInterfaces& engineInterfaces, csgo::Vector pingPos) noexcept;
         void drawPresetNodes(const EngineInterfaces& engineInterfaces) noexcept;
         void savePresetNodes() noexcept;
@@ -107,6 +104,10 @@ public:
 
         //misc bot shit
         void runBuybot(const EngineInterfaces& engineInterfaces) noexcept;
+        void handleBotState(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
+        void reportDeath(const Memory & memory, const EngineInterfaces & engineInterfaces, const csgo::GameEvent & event, bool forceReport = false) noexcept;
+        void reload(csgo::UserCmd * cmd, const Memory & memory, const EngineInterfaces & engineInterfaces) noexcept;
+        void checkForEnemies(const EngineInterfaces& engineInterfaces) noexcept;
 
 
     void addNeighborNodes(const EngineInterfaces& engineInterfaces) noexcept;
