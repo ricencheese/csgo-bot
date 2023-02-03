@@ -31,7 +31,8 @@ public:
         : clientInterfaces{ clientInterfaces }, interfaces{ otherInterfaces }, memory{ memory },
 #if IS_WIN32()
         setClanTag{ retSpoofGadgets->engine, enginePatternFinder("\x53\x56\x57\x8B\xDA\x8B\xF9\xFF\x15").get() },
-        submitReport{ retSpoofGadgets->client, clientPatternFinder("\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x28\x8B\x4D\x08").get() }
+        submitReport{ retSpoofGadgets->client, clientPatternFinder("\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x28\x8B\x4D\x08").get() },
+        voiceRecordStart{retSpoofGadgets->engine, enginePatternFinder("\x55\x8B\xEC\x83\xEC\x08\x56\x8B\xF1\x83\x7E\x0C").get() }
 #elif IS_LINUX()
         setClanTag{ retSpoofGadgets->engine, enginePatternFinder("\xE8????\xE9????\x66\x0F\x1F\x44??\x48\x8B\x7D\xB0").add(1).relativeToAbsolute().get() },
         submitReport{ retSpoofGadgets->client, clientPatternFinder("\x55\x48\x89\xF7\x48\x89\xE5\x41\x57\x41\x56\x41\x55\x41\x54\x53\x48\x89\xD3\x48\x83\xEC\x58").get() }
@@ -81,6 +82,10 @@ public:
     void readChat(const void* data, int size) noexcept;
     void chatOverhead(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
     void chatBot(const EngineInterfaces& engineInterfaces, const Memory& memory) noexcept;
+
+    //voicing
+    void voiceRecord(const EngineInterfaces& engineInterfaces) noexcept;
+    
     //botzzzzzzzzzzz shiz
         //aimbot shiz
         void aimAtEvent(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept;
@@ -150,4 +155,5 @@ private:
     ReturnAddress demoFileEndReached;
     FunctionInvoker<csgo::SendClanTag> setClanTag;
     FunctionInvoker<csgo::SubmitReport> submitReport;
+    FunctionInvoker<csgo::VoiceRecordStart> voiceRecordStart;
 };

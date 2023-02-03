@@ -89,7 +89,7 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
     features->misc.reload(cmd, *memory, getEngineInterfaces());
     features->misc.findPath(getEngineInterfaces());
     features->misc.chatBot(getEngineInterfaces(), *memory);
-    features->misc.repostMessageInChat(getEngineInterfaces());
+    //features->misc.repostMessageInChat(getEngineInterfaces());
     features->misc.enemiesRadar(*memory, getEngineInterfaces(), getOtherInterfaces());
     features->misc.handleLocatedEnemies(*memory, getEngineInterfaces(), getOtherInterfaces());
     features->misc.runBuybot(getEngineInterfaces());
@@ -97,8 +97,6 @@ bool GlobalContext::createMoveHook(float inputSampleTime, csgo::UserCmd* cmd)
 
     EnginePrediction::run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, *memory, cmd);
 
-    //features->aimbot.run(features->misc, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *config, *memory, cmd);
-    //Triggerbot::run(getEngineInterfaces().engineTrace(), getOtherInterfaces(), *memory, *config, cmd);
 
     auto viewAnglesDelta{ cmd->viewangles - previousViewAngles };
     viewAnglesDelta.normalize();
@@ -556,7 +554,6 @@ void GlobalContext::renderFrame()
         Chams::updateInput(*config);
         features->glow.updateInput();
 
-        //features->misc.gareg(getEngineInterfaces()); :tf:
         gui->handleToggle(features->misc, getOtherInterfaces());
 
         if (gui->isOpen())

@@ -297,8 +297,13 @@ struct BotzConfig {
 
 
 
-    float zoom = 1.f;
 } botzConfig;
+
+struct Rts {
+    
+    float zoom = 1.f;
+    bool fullscreen = false;
+}rts;
 
 struct Translate{
     std::array<std::string, 4>tabWalkbot        { "WALKBOT",                                "WALKBOT",                                      "WALKBOT",                                       "WALKBOT"};
@@ -944,25 +949,25 @@ void Misc::chatOverhead(const EngineInterfaces& engineInterfaces,const Memory& m
     engine.getPlayerInfo(miscConfig.playeruid, pInfo);
     std::string pName = pInfo.name;
 
-    if (!discordBot.isMessageSent) {
-        std::filesystem::path path;
-        if (PWSTR pathToDocs; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pathToDocs))) {
-            path = pathToDocs;
-            CoTaskMemFree(pathToDocs);
-        }
-        std::string strPath;
-        strPath = (path.string() + "/slippery/message.txt");
+    //if (!discordBot.isMessageSent) {
+    //    std::filesystem::path path;
+    //    if (PWSTR pathToDocs; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pathToDocs))) {
+    //        path = pathToDocs;
+    //        CoTaskMemFree(pathToDocs);
+    //    }
+    //    std::string strPath;
+    //    strPath = (path.string() + "/slippery/message.txt");
 
-        std::ofstream messageFile;
-        std::string messageOut = pName;
-        messageOut += ": ";
-        messageOut += miscConfig.message;
-        messageFile.open(strPath);
-        messageFile << messageOut;
-        messageFile.close();
+    //    std::ofstream messageFile;
+    //    std::string messageOut = pName;
+    //    messageOut += ": ";
+    //    messageOut += miscConfig.message;
+    //    messageFile.open(strPath);
+    //    messageFile << messageOut;
+    //    messageFile.close();
 
-        discordBot.isMessageSent = true;
-    }
+    //    discordBot.isMessageSent = true;
+    //}
 
     if (!miscConfig.overheadChat)
         return;
@@ -1035,6 +1040,19 @@ void Misc::chatBot(const EngineInterfaces& engineInterfaces, const Memory& memor
     engine.clientCmdUnrestricted(messageToSend.c_str());
 }
 
+//voicin
+void Misc::voiceRecord(const EngineInterfaces& engineInterfaces) noexcept {
+    if (!localPlayer)
+        return;
+
+    const csgo::Engine engine = engineInterfaces.getEngine();
+    if (!engine.isInGame())
+        return;
+
+    Misc::voiceRecordStart(nullptr, nullptr, "C:\\mapmuzak.wav");
+
+}
+
 
 void Misc::reportDeath(const Memory& memory, const EngineInterfaces& engineInterfaces, const csgo::GameEvent& event, bool forceReport) noexcept {
 
@@ -1083,6 +1101,7 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
             botzConfig.startedAiming = memory.globalVars->realtime;
     }
     const auto activeWeapon = csgo::Entity::from(retSpoofGadgets->client, localPlayer.get().getActiveWeapon());
+
     if (botzConfig.aimreason == 1) {
 
         if (activeWeapon.getWeaponType() == WeaponType::Knife || activeWeapon.getWeaponType() == WeaponType::C4)
@@ -1199,6 +1218,9 @@ void Misc::findBreakable(const EngineInterfaces& engineInterfaces,csgo::UserCmd*
     }
     if (botzConfig.shouldFire) {
         cmd->buttons |= csgo::UserCmd::IN_ATTACK;
+        const auto activeWeapon = csgo::Entity::from(retSpoofGadgets->client, localPlayer.get().getActiveWeapon());
+        if (activeWeapon.getWeaponType() == WeaponType::Pistol)
+            botzConfig.shouldFire = false;
     }
 }
 
@@ -1940,7 +1962,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         break;
     case 2:
         Misc::getMapNameOnce(engineInterfaces);
-        Misc::populateGameInfo(engineInterfaces);
+        //Misc::populateGameInfo(engineInterfaces);
         
         botzConfig.roundStartTime = memory.globalVars->realtime;
         botzConfig.buyAfter = fmod(memory.globalVars->realtime, 13);
@@ -1995,7 +2017,7 @@ void Misc::handleBotzEvents(const Memory& memory,const EngineInterfaces& engineI
         }
         break;
     case 14:
-        Misc::clearGameInfo();
+        //Misc::clearGameInfo();
         break;
     default:break;
     }
@@ -2057,6 +2079,8 @@ void Misc::debugDraw(const Memory& memory, const EngineInterfaces& engineInterfa
 
 //hooks&gui stuff 
 
+
+//RTS:GO gamemode
 void Misc::drawOverview(const Memory& memory, const EngineInterfaces& engineInterfaces) noexcept {
     if (!miscConfig.overviewOpen||!gui->isOpen())
         return;
@@ -2075,6 +2099,7 @@ void Misc::drawOverview(const Memory& memory, const EngineInterfaces& engineInte
         dlist->AddLine(ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y+40*index), ImVec2(ImGui::GetWindowPos().x+ImGui::GetWindowSize().x, ImGui::GetWindowPos().y+40*index), 0x66CCCCCC);
     }
     dlist->AddRectFilled(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + 42.f, ImGui::GetWindowPos().y + 22.f),0xFF161616);
+
     ImGui::SetCursorPos(ImVec2(0, 0));
     if(ImGui::Button("close"))
         miscConfig.overviewOpen=false;
@@ -2093,36 +2118,94 @@ void Misc::drawOverview(const Memory& memory, const EngineInterfaces& engineInte
 
     ImGui::SameLine();
     ImGui::PushItemWidth(150.f);
-    ImGui::SliderFloat("zoom:", &botzConfig.zoom, 0.01f, 10.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::SliderFloat("zoom", &rts.zoom, 0.5f, 10.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::PopItemWidth();
+    csgo::Vector lPlayerOrigin = localPlayer.get().getAbsOrigin();
+
     for (int index = 0; index < botzConfig.presetNodes.size(); index++) {
-        if (botzConfig.presetNodes[index].distTo(localPlayer.get().getAbsOrigin()) > 1800.f)
+        if (botzConfig.presetNodes[index].distTo(localPlayer.get().getAbsOrigin()) > 3600.f)
             continue;
 
         
         ImU32 color;
         switch (botzConfig.nodeGroup[index]) {
-            case 0: color = 0xFFBBBBBB; break;
-            case 1: color = 0xFFFFA500; break;
-            case 2: color = 0xFFEBD934; break;
-            case 3: color = 0xFFA534EB; break;
+            case 0: color = 0x99BBBBBB; break;
+            case 1: color = 0x99FFA500; break;
+            case 2: color = 0x99EBD934; break;
+            case 3: color = 0x99A534EB; break;
         }
 
         bool intersects=(
-            (botzConfig.presetNodes[index].x / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().x / botzConfig.zoom + ImGui::GetWindowPos().x)-15.f<ImGui::GetMousePos().x&&
-            (botzConfig.presetNodes[index].x / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().x / botzConfig.zoom + ImGui::GetWindowPos().x)+15.f>ImGui::GetMousePos().x&&
-            (botzConfig.presetNodes[index].y / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().y / botzConfig.zoom + ImGui::GetWindowPos().y)-15.f<ImGui::GetMousePos().y&&
-            (botzConfig.presetNodes[index].y / botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().y / botzConfig.zoom + ImGui::GetWindowPos().y)+15.f>ImGui::GetMousePos().y);
+            (botzConfig.presetNodes[index].x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x)-15.f<ImGui::GetMousePos().x&&
+            (botzConfig.presetNodes[index].x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x)+15.f>ImGui::GetMousePos().x&&
+            (botzConfig.presetNodes[index].y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y)-15.f<ImGui::GetMousePos().y&&
+            (botzConfig.presetNodes[index].y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y)+15.f>ImGui::GetMousePos().y);
 
         if (intersects)
             color = 0xFFFF0000;
 
-        dlist->AddCircleFilled(ImVec2((botzConfig.presetNodes[index].x/botzConfig.zoom+300-localPlayer.get().getAbsOrigin().x/botzConfig.zoom+ImGui::GetWindowPos().x), (botzConfig.presetNodes[index].y/botzConfig.zoom + 300 - localPlayer.get().getAbsOrigin().y/botzConfig.zoom+ImGui::GetWindowPos().y)), 15.f, color, 8);
+        dlist->AddCircleFilled(
+            ImVec2((botzConfig.presetNodes[index].x/rts.zoom+300-lPlayerOrigin.x/rts.zoom+ImGui::GetWindowPos().x), (botzConfig.presetNodes[index].y/rts.zoom + 300 - lPlayerOrigin.y/rts.zoom+ImGui::GetWindowPos().y)),
+            15.f, color, 8);
         
         if (intersects && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             botzConfig.finalDestination = botzConfig.presetNodes[index];
             Misc::pathfind(engineInterfaces, memory);
         }
+    }
+    
+
+
+    for (int i = 1; i <= engineInterfaces.getEngine().getMaxClients(); i++) {
+        const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(i));
+
+        if (entity.getPOD() == nullptr||!entity.isPlayer()||entity.getPOD()==localPlayer.get().getPOD())
+            continue;
+
+        csgo::Vector origin = entity.getAbsOrigin();
+
+        ImU32 color = 0x00000000;
+        bool isEnemy = entity.isOtherEnemy(memory, localPlayer.get());
+        bool isDead = !entity.isAlive();
+        bool isDormant = entity.getNetworkable().isDormant();
+
+
+        if (isEnemy) {//dormancy check crashes for some reason?
+            if (isDead)
+                color = 0xFF844646;
+            else if (isDormant)
+                color = 0xFF833232;
+            else color = 0xFFdb4343;
+            
+        }
+        else {
+            if (isDead)
+                color = 0xFF517b4a;
+            else if (isDormant)
+                color = 0xFF4e8332;
+            else color = 0xFF63ff00;
+        }
+            
+
+        if (isDead) {
+            dlist->AddLine(
+                ImVec2((origin.x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x) - 13.f, (origin.y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y) - 13.f),
+                ImVec2((origin.x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x) + 13.f, (origin.y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y) + 13.f),
+                color, 4.f);
+            dlist->AddLine(
+                ImVec2((origin.x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x) + 13.f, (origin.y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y) - 13.f),
+                ImVec2((origin.x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x) - 13.f, (origin.y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y) + 13.f),
+                color, 4.f);
+        }
+        else {
+            dlist->AddRect(
+                ImVec2((origin.x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x) - 13.f, (origin.y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y) - 13.f),
+                ImVec2((origin.x / rts.zoom + 300 - lPlayerOrigin.x / rts.zoom + ImGui::GetWindowPos().x) + 13.f, (origin.y / rts.zoom + 300 - lPlayerOrigin.y / rts.zoom + ImGui::GetWindowPos().y) + 13.f),
+                color, 0.f, ImDrawFlags_None, 4.f);
+        }
+        
+
+
     }
 
     ImGui::End();
@@ -2411,11 +2494,11 @@ void Misc::drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& invent
         if (ImGui::Button(translate.miscImAddicted[miscConfig.language].c_str()))
             Misc::antiaddiction();
 
-        if (ImGui::Button("Populate game info"))
-            Misc::populateGameInfo(engineInterfaces);
-        
-        if (ImGui::Button("Clear game info"))
-            Misc::clearGameInfo();
+        //if (ImGui::Button("Populate game info"))
+        //    Misc::populateGameInfo(engineInterfaces);
+        //
+        //if (ImGui::Button("Clear game info"))
+        //    Misc::clearGameInfo();
 
         if (ImGui::Button("Map overview"))
             miscConfig.overviewOpen = true;
