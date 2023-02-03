@@ -2103,15 +2103,49 @@ void Misc::drawOverview(const Memory& memory, const EngineInterfaces& engineInte
     ImGui::SetCursorPos(ImVec2(0, 0));
     if(ImGui::Button("close"))
         miscConfig.overviewOpen=false;
+    /*
     ImVec2 lPlayerPos = ImVec2(ImGui::GetWindowPos().x+300, ImGui::GetWindowPos().y+300);
     ImVec2 playerIcon[]{
         ImVec2(lPlayerPos.x,lPlayerPos.y+ 6.f),
         ImVec2(lPlayerPos.x-12.f,lPlayerPos.y+12.f),
         ImVec2(lPlayerPos.x,lPlayerPos.y-12.f),
         ImVec2(lPlayerPos.x+12.f,lPlayerPos.y+12.f)
+    };*/
+
+    ImVec2 center = ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x / 2, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y / 2);
+    ImVec2 playerIcon[] = {
+        ImVec2(center.x,center.y + 6.f),
+        ImVec2(center.x - 12.f,center.y + 12.f),
+        ImVec2(center.x,center.y - 12.f),
+        ImVec2(center.x + 12.f,center.y + 12.f)
     };
 
+    ImVec2 translation = center * -1; //save pos
+    for (int i = 0; i < 4; i++) {
+        playerIcon[i] = playerIcon[i] + translation;
+    }
+
+    float angle = botzConfig.localViewAngles.y * (3.14 / 180.0f); // angle of rotation in radians (MB numbers should be changed or muliplied by -1)
+    float c = cos(angle);
+    float s = sin(angle);
+
+    for (int i = 0; i < 4; i++)
+    {
+        ImVec2 pos = playerIcon[i];
+        playerIcon[i].x = pos.x * c - pos.y * s;
+        playerIcon[i].y = pos.x * s + pos.y * c;
+    }
+
+    for (int i = 0; i < 4; i++) { // restore pos after rotation coz it moved out of centre
+        playerIcon[i] = playerIcon[i] - translation;
+    }
+
+
     dlist->AddConvexPolyFilled(playerIcon, 4, 0xFFFFFF00);
+
+
+
+    //dlist->AddConvexPolyFilled(playerIcon, 4, 0xFFFFFF00);
     
     if (botzConfig.presetNodes.size() < 1)                                                          
         return;
