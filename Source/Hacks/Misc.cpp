@@ -1118,22 +1118,31 @@ void Misc::aimAtEvent(const Memory& memory,const EngineInterfaces& engineInterfa
     const auto aimPunch = activeWeapon.requiresRecoilControl() ? localPlayer.get().getAimPunch() : csgo::Vector{ };
 
     csgo::Vector relang = Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), botzConfig.aimspot, botzConfig.localViewAngles);
-    engine.setViewAngles({ botzConfig.localViewAngles.x + (relang.x-aimPunch.x*2) * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
-                           botzConfig.localViewAngles.y + (relang.y-aimPunch.y*2) * sin(memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime) / 2,
-                           0.f });
+
+    // Gradually adjust the view angles towards the aimspot over time
+    float elapsedTime = memory.globalVars->realtime - botzConfig.startedAiming - (botzConfig.aimreason == 3 ? 0.28f : botzConfig.aimtime[0]) + botzConfig.reactionTime;
+    float adjustmentSpeed = elapsedTime / 2;
+    float sinAdjustment = sin(adjustmentSpeed);
+    float archAdjustment = sinAdjustment * sinAdjustment;
+    engine.setViewAngles({
+      botzConfig.localViewAngles.x + relang.x * archAdjustment,
+      botzConfig.localViewAngles.y + relang.y * archAdjustment,
+      0.f
+        });
     
-    if ( -0.3f<relang.x && relang.x<0.3f&&
-         -0.3f<relang.y && relang.y<0.3f){
+    // If the view is close enough to the aimspot, stop aiming
+    if (abs(relang.x) < 0.3f && abs(relang.y) < 0.3f){
             botzConfig.startedAiming = -1.f;
             if (botzConfig.aimreason == 3||(botzConfig.aimreason==1&&botzConfig.enemyEntities.size()>0)) {
                 botzConfig.shouldFire = true;
-            }//
+            }
             botzConfig.aimreason = -1;
+
+
             return;
     }
 
-    if ((- 2.f > relang.x || relang.x > 2.f ||
-        -2.f > relang.y || relang.y > 2.f  ||botzConfig.enemyEntities.size()<1)) {
+    if ((abs(relang.x) < 0.3f && abs(relang.y) < 0.3f) ||botzConfig.enemyEntities.size()<1) {
             botzConfig.shouldFire = false;
     }
 }
