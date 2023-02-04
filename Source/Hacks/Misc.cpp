@@ -1158,6 +1158,7 @@ void Misc::enemiesRadar(const Memory& memory,const EngineInterfaces& engineInter
         return;
 
     botzConfig.enemyEntities.clear();
+    csgo::Trace trace; // allocate memory before loop to get fps $$$
     for (int i = 1; i <= engineInterfaces.getEngine().getMaxClients(); i++) {
         const auto entity = csgo::Entity::from(retSpoofGadgets->client, clientInterfaces.getEntityList().getEntity(i));
         if (entity.getPOD() == nullptr||!entity.isAlive()||!entity.isOtherEnemy(memory,localPlayer.get()))
@@ -1165,8 +1166,7 @@ void Misc::enemiesRadar(const Memory& memory,const EngineInterfaces& engineInter
         if (fabs(Aimbot::calculateRelativeAngle(localPlayer.get().getEyePosition(), entity.getEyePosition(), localPlayer.get().eyeAngles()).y) > 80)
             continue;
 
-        csgo::Trace trace;
-        engineInterfaces.engineTrace().traceRay({ localPlayer.get().getEyePosition(),{entity.getEyePosition().x,entity.getEyePosition().y,entity.getEyePosition().z+20.f}}, MASK_OPAQUE, localPlayer.get().getPOD(), trace);
+        engineInterfaces.engineTrace().traceRay({ localPlayer.get().getEyePosition(),{entity.getEyePosition().x,entity.getEyePosition().y,entity.getEyePosition().z + 20.f} }, MASK_OPAQUE, localPlayer.get().getPOD(), trace); 
         if (trace.contents != 0)
             continue;
         
