@@ -20,5 +20,7 @@
 *   **Misc** - Other features.
 *   **Config** - JSON config system.
 
+### NO LONGER MAINTAINED
+
 ### join the discord server
 https://discord.gg/8yueS8ND7Z
